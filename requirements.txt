@@ -1,1 +1,41 @@
-huggingface_hub==0.25.2
+# Core MCP dependencies
+mcp>=1.0.0
+
+# LangChain and LangGraph dependencies
+langchain>=0.1.0
+langchain-community>=0.0.10
+langchain-openai>=0.1.0
+langchain-mcp-adapters>=0.1.0
+langgraph>=0.0.20
+langsmith>=0.0.70
+
+# Database and data handling
+psycopg2-binary>=2.9.0
+sqlalchemy>=2.0.0
+
+# Validation and serialization
+pydantic>=1.10.0
+pydantic[email]>=1.10.0
+
+# Date and time handling
+python-dateutil>=2.8.0
+
+# Logging and monitoring
+structlog>=23.0.0
+
+# Development dependencies
+pytest>=7.0.0
+pytest-asyncio>=0.21.0
+black>=23.0.0
+isort>=5.12.0
+mypy>=1.0.0
+
+# Optional: For enhanced error handling
+tenacity>=8.0.0
+
+# Web interface
+gradio>=4.0.0
+
+# FastAPI and server
+fastapi>=0.104.0
+uvicorn>=0.24.0 
