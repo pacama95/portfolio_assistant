@@ -1,0 +1,10 @@
+pluginManagement {
+    repositories {
+        mavenCentral()
+        gradlePluginPortal()
+    }
+    plugins {
+        id 'io.quarkus' version '3.16.4'
+    }
+}
+rootProject.name='mcp_persistence_quarkus' 

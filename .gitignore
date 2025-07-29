@@ -270,11 +270,12 @@ secrets.json
 context_window_optimizer.py
 prompt_for_problem_resolution.md 
 # Quarkus and Java project ignores
-/target/
-/.quarkus/
-/.gradle/
-/.idea/
-/.classpath
-/.project
-/.settings/
-build/ 
+**/target/
+**/.quarkus/
+**/.gradle/
+**/.idea/
+**/.classpath
+**/.project
+**/.settings/
+**/build/
+**/bin/
