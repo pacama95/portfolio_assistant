@@ -11,7 +11,7 @@ from pathlib import Path
 import sys
 
 # Add parent directory to path for imports
-sys.path.insert(0, str(Path(__file__).parent.parent.parent))
+sys.path.insert(0, str(Path(__file__).parent.parent))
 
 # HTTP Server imports
 from fastapi import FastAPI, HTTPException, Request
@@ -20,12 +20,6 @@ from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 
 from datetime import datetime
-
-# HTTP Server imports
-from fastapi import FastAPI, HTTPException, Request
-from fastapi.responses import StreamingResponse, JSONResponse
-from fastapi.middleware.cors import CORSMiddleware
-import uvicorn
 
 class PortfolioHTTPServer:
     """Portfolio MCP Server with HTTP Transport"""
@@ -228,15 +222,27 @@ class PortfolioHTTPServer:
         """Setup all MCP tools using our existing portfolio tools"""
         # Import our existing tools
         try:
-            from .portfolio_server import PORTFOLIO_TOOLS
+            from portfolio_server import PORTFOLIO_TOOLS
         except ImportError:
             # Fallback to absolute import
-            from mcp_persistence.server.portfolio_server import PORTFOLIO_TOOLS
+            try:
+                from server.portfolio_server import PORTFOLIO_TOOLS
+            except ImportError:
+                # Final fallback
+                from mcp_persistence.server.portfolio_server import PORTFOLIO_TOOLS
         self.portfolio_tools = PORTFOLIO_TOOLS
     
     def get_available_tools(self) -> List[Dict[str, Any]]:
         """Get list of available portfolio tools with accurate schemas"""
-        from .portfolio_service import portfolio_service
+        try:
+            from portfolio_service import portfolio_service
+        except ImportError:
+            # Fallback to absolute import
+            try:
+                from server.portfolio_service import portfolio_service
+            except ImportError:
+                # Final fallback
+                from mcp_persistence.server.portfolio_service import portfolio_service
         
         tools = []
         for tool in self.portfolio_tools:
@@ -270,7 +276,16 @@ class PortfolioHTTPServer:
             raise ValueError(f"Tool '{tool_name}' not found")
         
         # Use the service to handle parameter transformation and execution
-        from .portfolio_service import portfolio_service
+        try:
+            from portfolio_service import portfolio_service
+        except ImportError:
+            # Fallback to absolute import
+            try:
+                from server.portfolio_service import portfolio_service
+            except ImportError:
+                # Final fallback
+                from mcp_persistence.server.portfolio_service import portfolio_service
+        
         return await portfolio_service.execute_tool(tool.func, arguments)
     
     async def start_server(self):

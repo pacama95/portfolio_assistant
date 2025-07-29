@@ -243,9 +243,6 @@ $RECYCLE.BIN/
 !README.txt
 !README.md
 
-# Jupyter notebooks (working files)
-*.ipynb
-
 # Database files
 *.db
 *.sqlite
@@ -272,3 +269,12 @@ secrets.json
 # Personal utility scripts that shouldn't be shared
 context_window_optimizer.py
 prompt_for_problem_resolution.md 
+# Quarkus and Java project ignores
+/target/
+/.quarkus/
+/.gradle/
+/.idea/
+/.classpath
+/.project
+/.settings/
+build/ 

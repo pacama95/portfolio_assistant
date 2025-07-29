@@ -19,10 +19,29 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__)))) 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))  # Add root to path
 
 # Local imports
-from persistence import (
-    transaction_crud, position_crud, portfolio_crud,
-    TransactionCreate, TransactionUpdate, PositionUpdate
-)
+try:
+    from persistence import (
+        transaction_crud, position_crud, portfolio_crud,
+        TransactionCreate, TransactionUpdate, PositionUpdate
+    )
+except ImportError:
+    # Fallback to absolute import
+    try:
+        from persistence import (
+            transaction_crud, position_crud, portfolio_crud,
+            TransactionCreate, TransactionUpdate, PositionUpdate
+        )
+    except ImportError:
+        # Final fallback - try to import from the parent directory
+        import sys
+        import os
+        parent_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        if parent_dir not in sys.path:
+            sys.path.insert(0, parent_dir)
+        from persistence import (
+            transaction_crud, position_crud, portfolio_crud,
+            TransactionCreate, TransactionUpdate, PositionUpdate
+        )
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)

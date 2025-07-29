@@ -14,7 +14,7 @@ sys.path.insert(0, str(Path(__file__).parent))
 async def main():
     """Main entry point for HTTP server launcher"""
     try:
-        from mcp_persistence.server.http_portfolio_server import main as http_main
+        from server.http_portfolio_server import main as http_main
         print("🚀 Starting Portfolio MCP HTTP Server...")
         await http_main()
     except KeyboardInterrupt:

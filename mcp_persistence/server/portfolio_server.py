@@ -10,13 +10,33 @@ import logging
 from langchain.tools import tool
 
 # Local imports - use operations from the new module
-from . import portfolio_operations
-from .portfolio_operations import (
-    CreateTransactionInput,
-    UpdateTransactionInput, 
-    UpdateMarketDataInput,
-    SearchTransactionsInput
-)
+try:
+    from portfolio_operations import (
+        CreateTransactionInput,
+        UpdateTransactionInput, 
+        UpdateMarketDataInput,
+        SearchTransactionsInput
+    )
+    import portfolio_operations
+except ImportError:
+    # Fallback to absolute import
+    try:
+        from server.portfolio_operations import (
+            CreateTransactionInput,
+            UpdateTransactionInput, 
+            UpdateMarketDataInput,
+            SearchTransactionsInput
+        )
+        from server import portfolio_operations
+    except ImportError:
+        # Final fallback
+        from mcp_persistence.server.portfolio_operations import (
+            CreateTransactionInput,
+            UpdateTransactionInput, 
+            UpdateMarketDataInput,
+            SearchTransactionsInput
+        )
+        from mcp_persistence.server import portfolio_operations
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
