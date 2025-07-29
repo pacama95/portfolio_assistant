@@ -74,8 +74,10 @@ public class TransactionResponse {
 
     public Boolean getIsFractional() { return isFractional; }
     public void setIsFractional(Boolean isFractional) { this.isFractional = isFractional; }
+
     public BigDecimal getFractionalMultiplier() { return fractionalMultiplier; }
     public void setFractionalMultiplier(BigDecimal fractionalMultiplier) { this.fractionalMultiplier = fractionalMultiplier; }
+    
     public Currency getCommissionCurrency() { return commissionCurrency; }
     public void setCommissionCurrency(Currency commissionCurrency) { this.commissionCurrency = commissionCurrency; }
 } 

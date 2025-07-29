@@ -62,7 +62,7 @@ public class TransactionEntity {
     private Boolean isFractional = false;
 
     @Column(name = "fractional_multiplier", precision = 10, scale = 8)
-    private BigDecimal fractionalMultiplier;
+    private BigDecimal fractionalMultiplier = BigDecimal.ONE;
 
     @Column(name = "notes", columnDefinition = "TEXT")
     private String notes;
