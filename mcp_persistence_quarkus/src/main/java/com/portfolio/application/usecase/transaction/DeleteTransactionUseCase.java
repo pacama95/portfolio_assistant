@@ -1,6 +1,7 @@
 package com.portfolio.application.usecase.transaction;
 
-import com.portfolio.domain.port.PositionRepository;
+import com.portfolio.domain.exception.Errors;
+import com.portfolio.domain.exception.ServiceException;
 import com.portfolio.domain.port.TransactionRepository;
 import io.quarkus.hibernate.reactive.panache.common.WithTransaction;
 import io.smallrye.mutiny.Uni;
@@ -9,41 +10,30 @@ import jakarta.inject.Inject;
 
 import java.util.UUID;
 
-/**
- * Use case for deleting transactions
- */
 @ApplicationScoped
 public class DeleteTransactionUseCase {
 
     @Inject
     TransactionRepository transactionRepository;
 
-    @Inject
-    PositionRepository positionRepository;
-
-    /**
-     * Deletes a transaction and recalculates the affected position
-     */
     @WithTransaction
     public Uni<Boolean> execute(UUID id) {
         return transactionRepository.findById(id)
-            .flatMap(transaction -> {
-                if (transaction == null) {
-                    return Uni.createFrom().item(false);
-                }
+                .onFailure().transform(throwable ->
+                        new ServiceException(Errors.DeleteTransaction.PERSISTENCE_ERROR, throwable))
+                .flatMap(transaction -> {
+                    if (transaction == null) {
+                        return Uni.createFrom().item(false);
+                    }
 
-                String ticker = transaction.getTicker();
-                
-                return transactionRepository.deleteById(id)
-                    .flatMap(deleted -> {
-                        if (deleted) {
-                            // Recalculate position after deletion
-                            return positionRepository.recalculatePosition(ticker)
-                                .replaceWith(true);
-                        } else {
-                            return Uni.createFrom().item(false);
-                        }
-                    });
-            });
+                    return transactionRepository.deleteById(id)
+                        .flatMap(deleted -> {
+                            if (deleted) {
+                                return Uni.createFrom().item(true);
+                            } else {
+                                return Uni.createFrom().item(false);
+                            }
+                        });
+                });
     }
 } 

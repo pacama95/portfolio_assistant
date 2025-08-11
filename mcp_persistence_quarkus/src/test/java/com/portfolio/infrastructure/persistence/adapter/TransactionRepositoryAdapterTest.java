@@ -10,7 +10,6 @@ import io.smallrye.mutiny.helpers.test.UniAssertSubscriber;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
@@ -81,22 +80,6 @@ class TransactionRepositoryAdapterTest {
         when(transactionEntityMapper.toDomain(entity)).thenReturn(transaction);
 
         Uni<List<Transaction>> uni = adapter.findByTicker(ticker);
-        List<Transaction> result = uni.subscribe().withSubscriber(UniAssertSubscriber.create()).assertCompleted().getItem();
-
-        assertNotNull(result);
-        assertEquals(1, result.size());
-        assertEquals(transaction, result.getFirst());
-        verify(transactionEntityMapper).toDomain(entity);
-    }
-
-    @Test
-    void testFindAllActive() {
-        TransactionEntity entity = mock(TransactionEntity.class);
-        Transaction transaction = mock(Transaction.class);
-        when(panacheRepository.findAllActive()).thenReturn(Uni.createFrom().item(List.of(entity)));
-        when(transactionEntityMapper.toDomain(entity)).thenReturn(transaction);
-
-        Uni<List<Transaction>> uni = adapter.findAllActive();
         List<Transaction> result = uni.subscribe().withSubscriber(UniAssertSubscriber.create()).assertCompleted().getItem();
 
         assertNotNull(result);

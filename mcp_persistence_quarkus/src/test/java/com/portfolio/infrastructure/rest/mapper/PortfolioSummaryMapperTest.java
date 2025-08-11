@@ -25,11 +25,11 @@ class PortfolioSummaryMapperTest {
 
         PortfolioSummaryResponse resp = mapper.toResponse(summary);
 
-        assertEquals(new BigDecimal("12345.6789"), resp.getTotalMarketValue()); // scale 4
-        assertEquals(new BigDecimal("12000.1235"), resp.getTotalCost()); // scale 4
-        assertEquals(new BigDecimal("345.5556"), resp.getTotalUnrealizedGainLoss()); // scale 4
-        assertEquals(new BigDecimal("2.8800"), resp.getTotalUnrealizedGainLossPercentage()); // scale 4
-        assertEquals(10L, resp.getTotalPositions());
-        assertEquals(8L, resp.getActivePositions());
+        assertEquals(new BigDecimal("12345.6789"), resp.totalMarketValue()); // scale 4
+        assertEquals(new BigDecimal("12000.1235"), resp.totalCost()); // scale 4
+        assertEquals(new BigDecimal("345.5556"), resp.totalUnrealizedGainLoss()); // scale 4
+        assertEquals(new BigDecimal("2.8800"), resp.totalUnrealizedGainLossPercentage()); // scale 4
+        assertEquals(10L, resp.totalPositions());
+        assertEquals(8L, resp.activePositions());
     }
 } 

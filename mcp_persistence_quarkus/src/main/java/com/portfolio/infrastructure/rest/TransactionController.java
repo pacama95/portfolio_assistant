@@ -7,6 +7,7 @@ import com.portfolio.application.usecase.transaction.UpdateTransactionUseCase;
 import com.portfolio.domain.model.TransactionType;
 import com.portfolio.infrastructure.rest.dto.CreateTransactionRequest;
 import com.portfolio.infrastructure.rest.dto.TransactionResponse;
+import com.portfolio.infrastructure.rest.dto.UpdateTransactionRequest;
 import com.portfolio.infrastructure.rest.mapper.TransactionMapper;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
@@ -47,14 +48,14 @@ public class TransactionController {
      */
     @POST
     public Uni<Response> createTransaction(@Valid CreateTransactionRequest request) {
-        return createTransactionUseCase.execute(transactionMapper.toTransaction(request))
-            .map(transaction -> transactionMapper.toResponse(transaction))
-            .map(response -> Response.status(Response.Status.CREATED).entity(response).build())
-            .onFailure().recoverWithItem(throwable -> 
-                Response.status(Response.Status.BAD_REQUEST)
-                    .entity("Error creating transaction: " + throwable.getMessage())
-                    .build()
-            );
+        return Uni.createFrom().item(() -> transactionMapper.toTransaction(request))
+                .flatMap(transaction -> createTransactionUseCase.execute(transaction))
+                .map(transaction -> transactionMapper.toResponse(transaction))
+                .map(response -> Response.status(Response.Status.CREATED).entity(response).build())
+                .onFailure().recoverWithItem(throwable ->
+                    Response.status(Response.Status.BAD_REQUEST)
+                       .entity("Error creating transaction: " + throwable.getMessage())
+                      .build());
     }
 
     /**
@@ -77,7 +78,7 @@ public class TransactionController {
      */
     @GET
     public Multi<TransactionResponse> getAllTransactions() {
-        return getTransactionUseCase.getAllActive()
+        return getTransactionUseCase.getAll()
             .map(transactionMapper::toResponse);
     }
 
@@ -111,9 +112,9 @@ public class TransactionController {
      */
     @PUT
     @Path("/{id}")
-    public Uni<Response> updateTransaction(@PathParam("id") UUID id, @Valid CreateTransactionRequest request) {
-        return Uni.createFrom().item(() -> transactionMapper.toTransaction(request))
-                .flatMap(updatedTransaction -> updateTransactionUseCase.execute(id, updatedTransaction))
+    public Uni<Response> updateTransaction(@PathParam("id") UUID id, @Valid UpdateTransactionRequest updateTransactionRequest) {
+        return Uni.createFrom().item(() -> transactionMapper.toUpdateTransactionCommand(id, updateTransactionRequest))
+                .flatMap(updatedTransaction -> updateTransactionUseCase.execute(updatedTransaction))
                 .map(transaction -> {
                     if (transaction == null) {
                         return Response.status(Response.Status.NOT_FOUND).build();

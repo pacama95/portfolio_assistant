@@ -13,11 +13,6 @@ import java.util.UUID;
 public interface PositionRepository {
 
     /**
-     * Saves a new position
-     */
-    Uni<Position> save(Position position);
-
-    /**
      * Finds a position by its ID
      */
     Uni<Position> findById(UUID id);
@@ -26,16 +21,6 @@ public interface PositionRepository {
      * Finds a position by ticker symbol
      */
     Uni<Position> findByTicker(String ticker);
-
-    /**
-     * Updates an existing position
-     */
-    Uni<Position> update(Position position);
-
-    /**
-     * Deletes a position by ID
-     */
-    Uni<Boolean> deleteById(UUID id);
 
     /**
      * Finds all active positions (with shares > 0)
@@ -51,11 +36,6 @@ public interface PositionRepository {
      * Updates market price for a specific ticker
      */
     Uni<Position> updateMarketPrice(String ticker, BigDecimal newPrice);
-
-    /**
-     * Upserts a position (insert or update based on ticker)
-     */
-    Uni<Position> upsertPosition(Position position);
 
     /**
      * Recalculates position based on current transactions

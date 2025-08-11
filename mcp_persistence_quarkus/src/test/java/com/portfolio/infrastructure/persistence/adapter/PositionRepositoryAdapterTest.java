@@ -10,7 +10,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
-import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
@@ -27,22 +26,6 @@ class PositionRepositoryAdapterTest {
         panacheRepository = mock(PositionPanacheRepository.class);
         positionEntityMapper = mock(PositionEntityMapper.class);
         adapter = new PositionRepositoryAdapter(panacheRepository, positionEntityMapper);
-    }
-
-    @Test
-    void testSave() {
-        Position position = mock(Position.class);
-        PositionEntity entity = mock(PositionEntity.class);
-        when(positionEntityMapper.toEntity(position)).thenReturn(entity);
-        when(panacheRepository.persistAndFlush(entity)).thenReturn(Uni.createFrom().item(entity));
-        when(positionEntityMapper.toDomain(entity)).thenReturn(position);
-
-        Uni<Position> uni = adapter.save(position);
-        Position result = uni.subscribe().withSubscriber(UniAssertSubscriber.create()).assertCompleted().getItem();
-
-        assertEquals(position, result);
-        verify(positionEntityMapper).toEntity(position);
-        verify(positionEntityMapper).toDomain(entity);
     }
 
     @Test
@@ -93,33 +76,6 @@ class PositionRepositoryAdapterTest {
         Position result = uni.subscribe().withSubscriber(UniAssertSubscriber.create()).assertCompleted().getItem();
 
         assertNull(result);
-    }
-
-    @Test
-    void testUpdate() {
-        Position position = mock(Position.class);
-        PositionEntity entity = mock(PositionEntity.class);
-        when(positionEntityMapper.toEntity(position)).thenReturn(entity);
-        when(panacheRepository.persistAndFlush(entity)).thenReturn(Uni.createFrom().item(entity));
-        when(positionEntityMapper.toDomain(entity)).thenReturn(position);
-
-        Uni<Position> uni = adapter.update(position);
-        Position result = uni.subscribe().withSubscriber(UniAssertSubscriber.create()).assertCompleted().getItem();
-
-        assertEquals(position, result);
-        verify(positionEntityMapper).toEntity(position);
-        verify(positionEntityMapper).toDomain(entity);
-    }
-
-    @Test
-    void testDeleteById() {
-        UUID id = UUID.randomUUID();
-        when(panacheRepository.deleteById(id)).thenReturn(Uni.createFrom().item(true));
-
-        Uni<Boolean> uni = adapter.deleteById(id);
-        Boolean result = uni.subscribe().withSubscriber(UniAssertSubscriber.create()).assertCompleted().getItem();
-
-        assertTrue(result);
     }
 
     @Test
@@ -180,22 +136,6 @@ class PositionRepositoryAdapterTest {
         Position result = uni.subscribe().withSubscriber(UniAssertSubscriber.create()).assertCompleted().getItem();
 
         assertNull(result);
-    }
-
-    @Test
-    void testUpsertPosition() {
-        Position position = mock(Position.class);
-        PositionEntity entity = mock(PositionEntity.class);
-        when(positionEntityMapper.toEntity(position)).thenReturn(entity);
-        when(panacheRepository.upsertPosition(entity)).thenReturn(Uni.createFrom().item(entity));
-        when(positionEntityMapper.toDomain(entity)).thenReturn(position);
-
-        Uni<Position> uni = adapter.upsertPosition(position);
-        Position result = uni.subscribe().withSubscriber(UniAssertSubscriber.create()).assertCompleted().getItem();
-
-        assertEquals(position, result);
-        verify(positionEntityMapper).toEntity(position);
-        verify(positionEntityMapper).toDomain(entity);
     }
 
     @Test

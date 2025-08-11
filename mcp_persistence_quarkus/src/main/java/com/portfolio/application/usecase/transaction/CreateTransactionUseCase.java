@@ -1,7 +1,8 @@
 package com.portfolio.application.usecase.transaction;
 
+import com.portfolio.domain.exception.Errors;
+import com.portfolio.domain.exception.ServiceException;
 import com.portfolio.domain.model.Transaction;
-import com.portfolio.domain.port.PositionRepository;
 import com.portfolio.domain.port.TransactionRepository;
 import io.quarkus.hibernate.reactive.panache.common.WithTransaction;
 import io.quarkus.logging.Log;
@@ -18,17 +19,13 @@ public class CreateTransactionUseCase {
     @Inject
     TransactionRepository transactionRepository;
 
-    @Inject
-    PositionRepository positionRepository;
-
     /**
      * Creates a new transaction and updates the corresponding position
      */
     @WithTransaction
     public Uni<Transaction> execute(Transaction transaction) {
         return transactionRepository.save(transaction)
-                .flatMap(savedTransaction -> positionRepository.recalculatePosition(savedTransaction.getTicker()))
-                .onItem().invoke(position -> Log.info("Transaction saved and related position with ticker %s recalculated".formatted(position.getTicker())))
-                .replaceWith(transaction);
+                .onFailure().transform(throwable -> new ServiceException(Errors.CreateTransaction.PERSISTENCE_ERROR, throwable))
+                .onItem().invoke(saved -> Log.info("Transaction saved for ticker %s".formatted(saved.getTicker())));
     }
 } 

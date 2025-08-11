@@ -4,6 +4,7 @@ import com.portfolio.infrastructure.persistence.entity.PositionEntity;
 import io.quarkus.hibernate.reactive.panache.PanacheRepository;
 import io.quarkus.hibernate.reactive.panache.common.WithSession;
 import io.quarkus.hibernate.reactive.panache.common.WithTransaction;
+import io.quarkus.hibernate.reactive.panache.Panache;
 import io.smallrye.mutiny.Uni;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -22,15 +23,9 @@ public class PositionPanacheRepository implements PanacheRepository<PositionEnti
     @Inject
     TransactionPanacheRepository transactionRepository;
 
-    // READ operations - use @WithSession
     @WithSession
     public Uni<PositionEntity> findById(UUID id) {
         return find("id = ?1", id).firstResult();
-    }
-
-    @WithSession
-    public Uni<Boolean> deleteById(UUID id) {
-        return delete("id = ?1", id).map(count -> count > 0);
     }
 
     @WithSession
@@ -60,7 +55,6 @@ public class PositionPanacheRepository implements PanacheRepository<PositionEnti
         return find("currentQuantity > 0").count();
     }
 
-    // WRITE operations - use @WithTransaction
     @WithTransaction
     public Uni<PositionEntity> updateMarketPrice(String ticker, BigDecimal newPrice) {
         return findByTicker(ticker)
@@ -84,38 +78,13 @@ public class PositionPanacheRepository implements PanacheRepository<PositionEnti
     }
 
     @WithTransaction
-    public Uni<PositionEntity> upsertPosition(PositionEntity position) {
-        return findByTicker(position.getTicker())
-            .flatMap(existing -> {
-                if (existing != null) {
-                    // Update existing position
-                    existing.setCurrentQuantity(position.getCurrentQuantity());
-                    existing.setAvgCostPerShare(position.getAvgCostPerShare());
-                    existing.setTotalCostBasis(position.getTotalCostBasis());
-                    existing.setPrimaryCurrency(position.getPrimaryCurrency());
-                    existing.setLastTransactionDate(position.getLastTransactionDate());
-                    existing.setTotalCommissions(position.getTotalCommissions());
-                    existing.setFirstPurchaseDate(position.getFirstPurchaseDate());
-                    
-                    // Recalculate derived fields if current price exists
-                    BigDecimal marketValue = existing.getCurrentQuantity().multiply(existing.getCurrentPrice());
-                    existing.setCurrentMarketValue(marketValue);
-                    existing.setUnrealizedGainLoss(marketValue.subtract(existing.getTotalCostBasis()));
-                    
-                    return persistAndFlush(existing);
-                } else {
-                    // Create new position
-                    return persistAndFlush(position);
-                }
-            });
-    }
-
-    @WithTransaction
     public Uni<PositionEntity> recalculatePosition(String ticker) {
-        // Call the stored procedure to recalculate position from transactions
-        // Use a native query to execute the stored procedure
-        return find("SELECT recalculate_position(?1)", ticker)
-            .firstResult()
-            .flatMap(result -> findByTicker(ticker));
+        // Call the stored procedure to recalculate position from transactions using a native query
+        return Panache.getSession()
+            .flatMap(session -> session
+                .createNativeQuery("select recalculate_position(?1)")
+                .setParameter(1, ticker)
+                .getSingleResult())
+            .flatMap(ignored -> findByTicker(ticker));
     }
 } 

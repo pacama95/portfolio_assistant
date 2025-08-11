@@ -52,14 +52,6 @@ public class TransactionRepositoryAdapter implements TransactionRepository {
     }
 
     @Override
-    public Uni<List<Transaction>> findAllActive() {
-        return panacheRepository.findAllActive()
-            .map(entities -> entities.stream()
-                .map(transactionEntityMapper::toDomain)
-                .toList());
-    }
-
-    @Override
     public Uni<List<Transaction>> findAll() {
         return panacheRepository.findAllOrderedByDate()
             .map(entities -> entities.stream()
@@ -68,8 +60,10 @@ public class TransactionRepositoryAdapter implements TransactionRepository {
     }
 
     @Override
-    public Uni<List<Transaction>> searchTransactions(String ticker, TransactionType type, 
-                                                    LocalDate fromDate, LocalDate toDate) {
+    public Uni<List<Transaction>> searchTransactions(String ticker,
+                                                     TransactionType type,
+                                                     LocalDate fromDate,
+                                                     LocalDate toDate) {
         return panacheRepository.searchTransactions(ticker, type, fromDate, toDate)
             .map(entities -> entities.stream()
                 .map(transactionEntityMapper::toDomain)
@@ -78,9 +72,9 @@ public class TransactionRepositoryAdapter implements TransactionRepository {
 
     @Override
     public Uni<Transaction> update(Transaction transaction) {
-        TransactionEntity entity = transactionEntityMapper.toEntity(transaction);
-        return panacheRepository.persistAndFlush(entity)
-            .map(transactionEntityMapper::toDomain);
+        return Uni.createFrom().item(() -> transactionEntityMapper.toEntity(transaction))
+                .flatMap(panacheRepository::persistAndFlush)
+                .map(transactionEntityMapper::toDomain);
     }
 
     @Override

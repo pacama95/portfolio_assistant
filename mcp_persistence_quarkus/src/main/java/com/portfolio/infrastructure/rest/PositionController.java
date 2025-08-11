@@ -6,7 +6,6 @@ import com.portfolio.application.usecase.position.UpdateMarketDataUseCase;
 import com.portfolio.infrastructure.rest.dto.PositionResponse;
 import com.portfolio.infrastructure.rest.dto.UpdateMarketDataRequest;
 import com.portfolio.infrastructure.rest.mapper.PositionMapper;
-import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
 import jakarta.inject.Inject;
 import jakarta.validation.Valid;
@@ -93,7 +92,7 @@ public class PositionController {
     @Path("/ticker/{ticker}/price")
     public Uni<Response> updateMarketPrice(@PathParam("ticker") String ticker, 
                                          @Valid UpdateMarketDataRequest request) {
-        return updateMarketDataUseCase.execute(ticker, request.getPrice())
+        return updateMarketDataUseCase.execute(ticker, request.price())
             .map(position -> Response.ok(positionMapper.toResponse(position)).build())
             .onFailure().recoverWithItem(throwable -> 
                 Response.status(Response.Status.BAD_REQUEST)

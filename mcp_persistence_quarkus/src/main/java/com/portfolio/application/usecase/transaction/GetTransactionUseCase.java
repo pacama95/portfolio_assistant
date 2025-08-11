@@ -40,15 +40,6 @@ public class GetTransactionUseCase {
     }
 
     /**
-     * Gets all active transactions
-     */
-    public Multi<Transaction> getAllActive() {
-        return transactionRepository.findAllActive()
-            .onItem()
-            .transformToMulti(list -> Multi.createFrom().iterable(list));
-    }
-
-    /**
      * Gets all transactions (active and inactive)
      */
     public Multi<Transaction> getAll() {

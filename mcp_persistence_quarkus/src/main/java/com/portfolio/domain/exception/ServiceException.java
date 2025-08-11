@@ -13,6 +13,11 @@ public class ServiceException extends RuntimeException {
         this.error = error;
     }
 
+    public ServiceException(Error error, Throwable cause) {
+        super(cause);
+        this.error = error;
+    }
+
     public ServiceException(Error error, String message, Throwable cause) {
         super(message, cause);
         this.error = error;

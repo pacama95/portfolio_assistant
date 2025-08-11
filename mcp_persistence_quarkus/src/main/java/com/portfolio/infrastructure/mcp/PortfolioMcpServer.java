@@ -1,6 +1,7 @@
 package com.portfolio.infrastructure.mcp;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.portfolio.application.command.UpdateTransactionCommand;
 import com.portfolio.application.usecase.portfolio.GetPortfolioSummaryUseCase;
 import com.portfolio.application.usecase.position.GetPositionUseCase;
 import com.portfolio.application.usecase.position.RecalculatePositionUseCase;
@@ -12,6 +13,7 @@ import com.portfolio.application.usecase.transaction.UpdateTransactionUseCase;
 import com.portfolio.domain.model.Currency;
 import com.portfolio.domain.model.Transaction;
 import com.portfolio.domain.model.TransactionType;
+import com.portfolio.util.StringUtils;
 import io.quarkiverse.mcp.server.Tool;
 import io.quarkiverse.mcp.server.ToolArg;
 import io.quarkiverse.mcp.server.ToolCallException;
@@ -24,10 +26,6 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.UUID;
 
-/**
- * Portfolio MCP Server using Quarkus MCP Extension
- * Exposes the same tools as portfolio_server.py
- */
 @Singleton
 public class PortfolioMcpServer {
 
@@ -65,14 +63,15 @@ public class PortfolioMcpServer {
             @ToolArg(description = "Quantity of shares") Object quantity,
             @ToolArg(description = "Price per share") Object price,
             @ToolArg(description = "Fees paid per transaction", required = false) Object fees,
-            @ToolArg(description = "Determine if this is an operation on a stock fraction (for fractional offerings)", required = false) boolean isFractional,
-            @ToolArg(description = "Fraction of the real stock option represented by this fracitonal offered option", required = false) Object fractionalMultiplier,
-            @ToolArg(description = "Fees currency", required = false) Currency commissionCurrency,
+            @ToolArg(description = "Determine if this is an operation on a stock fraction (for fractional offerings)", required = false, defaultValue = "false") boolean isFractional,
+            @ToolArg(description = "Fraction of the real stock option represented by this fractional offered option", required = false) Object fractionalMultiplier,
+            @ToolArg(description = "Fees currency", required = false, defaultValue = "USD") Currency commissionCurrency,
             @ToolArg(description = "Transaction currency") Currency currency,
             @ToolArg(description = "Transaction date (YYYY-MM-DD)") String date,
-            @ToolArg(description = "Transaction notes (optional)", required = false) String notes) {
+            @ToolArg(description = "Transaction notes", required = false) String notes) {
         
         try {
+            // TODO: Define default value converters for BigDecimal and Currency
             TransactionType transactionType = TransactionType.valueOf(type.toUpperCase());
             LocalDate transactionDate = LocalDate.parse(date);
             BigDecimal quantityBD = toBigDecimal(quantity);
@@ -110,8 +109,9 @@ public class PortfolioMcpServer {
     }
 
     @Tool(description = "Get a transaction by its ID.")
-    public Uni<String> getTransaction(@ToolArg(description = "The ID of the transaction to retrieve") UUID transactionId) {
-        return getTransactionUseCase.getById(transactionId)
+    public Uni<String> getTransaction(@ToolArg(description = "The ID of the transaction to retrieve (UUID format)") String transactionId) {
+        return Uni.createFrom().item(() -> UUID.fromString(transactionId))
+                .flatMap(trxId -> getTransactionUseCase.getById(trxId))
             .map(transaction -> {
                 try {
                     return objectMapper.writeValueAsString(transaction);
@@ -125,48 +125,63 @@ public class PortfolioMcpServer {
 
     @Tool(description = "Update an existing transaction.")
     public Uni<String> updateTransaction(
-            @ToolArg(description = "Transaction ID to update") UUID transactionId,
-            @ToolArg(description = "New ticker symbol (optional)") String ticker,
-            @ToolArg(description = "New transaction type (optional)") String type,
-            @ToolArg(description = "New quantity (optional)") Object quantity,
-            @ToolArg(description = "New price (optional)") Object price,
-            @ToolArg(description = "New date (YYYY-MM-DD, optional)") String date,
-            @ToolArg(description = "New notes (optional)") String notes) {
+            @ToolArg(description = "Transaction ID to update (UUID format)") String transactionId,
+            @ToolArg(description = "Stock ticker symbol") String ticker,
+            @ToolArg(description = "Transaction type (BUY, SELL, DIVIDEND)") String type,
+            @ToolArg(description = "Quantity of shares") Object quantity,
+            @ToolArg(description = "Price per share") Object price,
+            @ToolArg(description = "Fees paid per transaction", required = false) Object fees,
+            @ToolArg(description = "Determine if this is an operation on a stock fraction (for fractional offerings)", required = false, defaultValue = "false") boolean isFractional,
+            @ToolArg(description = "Fraction of the real stock option represented by this fractional offered option", required = false) Object fractionalMultiplier,
+            @ToolArg(description = "Fees currency", required = false, defaultValue = "USD") Currency commissionCurrency,
+            @ToolArg(description = "Transaction currency") Currency currency,
+            @ToolArg(description = "Transaction date (YYYY-MM-DD)") String date,
+            @ToolArg(description = "Transaction notes", required = false) String notes) {
         
         try {
-            TransactionType transactionType = type != null ? TransactionType.valueOf(type.toUpperCase()) : null;
-            LocalDate transactionDate = date != null ? LocalDate.parse(date) : null;
+            // TODO: Define default value converters for BigDecimal and Currency
+            TransactionType transactionType = TransactionType.valueOf(type.toUpperCase());
+            LocalDate transactionDate = LocalDate.parse(date);
             BigDecimal quantityBD = toBigDecimal(quantity);
             BigDecimal priceBD = toBigDecimal(price);
+            BigDecimal feesBD = toBigDecimal(fees);
+            BigDecimal fractionalMultiplierBD = toBigDecimal(fractionalMultiplier);
 
-            return getTransactionUseCase.getById(transactionId)
-                .map(transaction -> {
-                    if (ticker != null) transaction.setTicker(ticker);
-                    if (transactionType != null) transaction.setTransactionType(transactionType);
-                    if (transactionDate != null) transaction.setTransactionDate(transactionDate);
-                    if (notes != null) transaction.setNotes(notes);
-                    if (priceBD != null) transaction.setPrice(priceBD);
-                    if (quantityBD != null) transaction.setQuantity(quantityBD);
-                    return transaction;
-                })
-                .flatMap(transaction -> updateTransactionUseCase.execute(transactionId, transaction))
-                .map(result -> {
-                    try {
-                        return objectMapper.writeValueAsString(result);
-                    } catch (Exception e) {
-                        throw new RuntimeException("Error serializing result", e);
-                    }
-                })
-                .onFailure().invoke(e -> Log.error("Error updating transaction with ID %s".formatted(transactionId), e))
-                .onFailure().transform(throwable -> new ToolCallException("Error updating transaction with ID %s".formatted(transactionId)));
+            // TODO: Refactor this to avoid fetching the transaction twice
+            return Uni.createFrom().item(() -> new UpdateTransactionCommand(
+                            UUID.fromString(transactionId),
+                            ticker,
+                            transactionType,
+                            quantityBD,
+                            priceBD,
+                            feesBD,
+                            currency,
+                            transactionDate,
+                            notes,
+                            isFractional,
+                            fractionalMultiplierBD,
+                            commissionCurrency)
+                    )
+                    .flatMap(updateTransactionCommand ->
+                            updateTransactionUseCase.execute(updateTransactionCommand))
+                    .map(result -> {
+                        try {
+                            return objectMapper.writeValueAsString(result);
+                        } catch (Exception e) {
+                            throw new RuntimeException("Error serializing result", e);
+                        }
+                    })
+                    .onFailure().invoke(e -> Log.error("Error updating transaction with ID %s".formatted(transactionId), e))
+                    .onFailure().transform(throwable -> new ToolCallException("Error updating transaction with ID %s".formatted(transactionId)));
         } catch (Exception e) {
             throw new ToolCallException("Validation error", e);
         }
     }
 
     @Tool(description = "Delete a transaction by ID.")
-    public Uni<String> deleteTransaction(@ToolArg(description = "The ID of the transaction to delete") UUID transactionId) {
-        return deleteTransactionUseCase.execute(transactionId)
+    public Uni<String> deleteTransaction(@ToolArg(description = "The ID of the transaction to delete (UUID format)") String transactionId) {
+        return Uni.createFrom().item(() -> UUID.fromString(transactionId))
+                .flatMap(trxId -> deleteTransactionUseCase.execute(trxId))
             .map(result -> {
                 try {
                     return objectMapper.writeValueAsString(result);
@@ -255,15 +270,15 @@ public class PortfolioMcpServer {
 
     @Tool(description = "Search transactions with multiple filters.")
     public Uni<String> searchTransactions(
-            @ToolArg(description = "Stock ticker symbol (optional)") String ticker,
-            @ToolArg(description = "Start date (YYYY-MM-DD, optional)") String startDate,
-            @ToolArg(description = "End date (YYYY-MM-DD, optional)") String endDate,
-            @ToolArg(description = "Transaction type (optional)") String type) {
+            @ToolArg(description = "Stock ticker symbol", required = false) String ticker,
+            @ToolArg(description = "Start date (YYYY-MM-DD)", required = false) String startDate,
+            @ToolArg(description = "End date (YYYY-MM-DD)", required = false) String endDate,
+            @ToolArg(description = "Transaction type", required = false) String type) {
         
         try {
-            TransactionType transactionType = type != null ? TransactionType.valueOf(type.toUpperCase()) : null;
-            LocalDate fromDate = startDate != null ? LocalDate.parse(startDate) : null;
-            LocalDate toDate = endDate != null ? LocalDate.parse(endDate) : null;
+            TransactionType transactionType = StringUtils.hasMeaningfulContent(type) ? TransactionType.valueOf(type.toUpperCase()) : null;
+            LocalDate fromDate = StringUtils.hasMeaningfulContent(startDate) ? LocalDate.parse(startDate) : null;
+            LocalDate toDate = StringUtils.hasMeaningfulContent(endDate) ? LocalDate.parse(endDate) : null;
             
             return getTransactionUseCase.searchTransactions(ticker, transactionType, fromDate, toDate)
                 .collect().asList()

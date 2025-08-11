@@ -2,12 +2,15 @@ package com.portfolio.infrastructure.rest.dto;
 
 import com.portfolio.domain.model.Currency;
 import com.portfolio.domain.model.TransactionType;
-import jakarta.validation.constraints.*;
+import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.PastOrPresent;
+import jakarta.validation.constraints.Size;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
-public record CreateTransactionRequest(
+public record UpdateTransactionRequest(
     @NotNull(message = "Ticker is required")
     @Size(min = 1, max = 10, message = "Ticker must be between 1 and 10 characters")
     String ticker,
@@ -40,36 +43,4 @@ public record CreateTransactionRequest(
     BigDecimal fractionalMultiplier,
     Currency commissionCurrency
 ) {
-
-    public CreateTransactionRequest {
-        if (fees == null) {
-            fees = BigDecimal.ZERO;
-        }
-        if (isFractional == null) {
-            isFractional = false;
-        }
-        if (fractionalMultiplier == null) {
-            fractionalMultiplier = BigDecimal.ONE;
-        }
-    }
-
-    public CreateTransactionRequest(String ticker,
-                                    TransactionType transactionType,
-                                    BigDecimal quantity,
-                                    BigDecimal price,
-                                    Currency currency,
-                                    LocalDate transactionDate) {
-        this(
-                ticker,
-                transactionType,
-                quantity,
-                price,
-                BigDecimal.ZERO,
-                currency,
-                transactionDate,
-                null,
-                false,
-                BigDecimal.ONE,
-                null);
-    }
 } 

@@ -7,7 +7,6 @@ import com.portfolio.infrastructure.persistence.repository.PositionPanacheReposi
 import com.portfolio.infrastructure.persistence.mapper.PositionEntityMapper;
 import io.smallrye.mutiny.Uni;
 import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -28,13 +27,6 @@ public class PositionRepositoryAdapter implements PositionRepository {
     }
 
     @Override
-    public Uni<Position> save(Position position) {
-        PositionEntity entity = positionEntityMapper.toEntity(position);
-        return panacheRepository.persistAndFlush(entity)
-            .map(positionEntityMapper::toDomain);
-    }
-
-    @Override
     public Uni<Position> findById(UUID id) {
         return panacheRepository.findById(id)
             .map(entity -> entity != null ? positionEntityMapper.toDomain(entity) : null);
@@ -44,18 +36,6 @@ public class PositionRepositoryAdapter implements PositionRepository {
     public Uni<Position> findByTicker(String ticker) {
         return panacheRepository.findByTicker(ticker)
             .map(entity -> entity != null ? positionEntityMapper.toDomain(entity) : null);
-    }
-
-    @Override
-    public Uni<Position> update(Position position) {
-        PositionEntity entity = positionEntityMapper.toEntity(position);
-        return panacheRepository.persistAndFlush(entity)
-            .map(positionEntityMapper::toDomain);
-    }
-
-    @Override
-    public Uni<Boolean> deleteById(UUID id) {
-        return panacheRepository.deleteById(id);
     }
 
     @Override
@@ -78,13 +58,6 @@ public class PositionRepositoryAdapter implements PositionRepository {
     public Uni<Position> updateMarketPrice(String ticker, BigDecimal newPrice) {
         return panacheRepository.updateMarketPrice(ticker, newPrice)
             .map(entity -> entity != null ? positionEntityMapper.toDomain(entity) : null);
-    }
-
-    @Override
-    public Uni<Position> upsertPosition(Position position) {
-        PositionEntity entity = positionEntityMapper.toEntity(position);
-        return panacheRepository.upsertPosition(entity)
-            .map(positionEntityMapper::toDomain);
     }
 
     @Override

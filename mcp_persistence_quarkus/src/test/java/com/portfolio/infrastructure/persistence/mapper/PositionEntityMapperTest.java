@@ -8,6 +8,7 @@ import org.junit.jupiter.api.Test;
 import org.mapstruct.factory.Mappers;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -21,57 +22,27 @@ class PositionEntityMapperTest {
     }
 
     @Test
-    void testToEntityFullMapping() {
-        Position position = new Position();
-        UUID id = UUID.randomUUID();
-        position.setId(id);
-        position.setTicker("AAPL");
-        position.setTotalQuantity(new BigDecimal("10.0"));
-        position.setAveragePrice(new BigDecimal("100.0"));
-        position.setTotalCost(new BigDecimal("1000.0"));
-        position.setCurrentPrice(new BigDecimal("120.0"));
-        position.setCurrency(Currency.EUR);
-        position.setLastUpdated(java.time.LocalDate.now());
+    void testToDomain() {
+        PositionEntity entity = new PositionEntity();
+        var now = LocalDate.now();
+        entity.setTicker("AAPL");
+        entity.setCurrentQuantity(BigDecimal.valueOf(100));
+        entity.setAvgCostPerShare(BigDecimal.valueOf(150));
+        entity.setTotalCostBasis(BigDecimal.valueOf(20));
+        entity.setPrimaryCurrency(Currency.USD);
+        entity.setLastTransactionDate(now);
+        entity.setUnrealizedGainLoss(BigDecimal.valueOf(1000));
+        entity.setCurrentPrice(BigDecimal.valueOf(10));
 
-        PositionEntity entity = mapper.toEntity(position);
-        assertNotNull(entity);
-        assertEquals(id, entity.getId());
-        assertEquals("AAPL", entity.getTicker());
-        assertEquals(new BigDecimal("10.0"), entity.getCurrentQuantity());
-        assertEquals(new BigDecimal("100.0"), entity.getAvgCostPerShare());
-        assertEquals(new BigDecimal("1000.0"), entity.getTotalCostBasis());
-        assertEquals(new BigDecimal("120.0"), entity.getCurrentPrice());
-        assertEquals(Currency.EUR, entity.getPrimaryCurrency());
-        assertEquals(position.getLastUpdated(), entity.getLastTransactionDate());
-        assertEquals(position.getLastUpdated(), entity.getFirstPurchaseDate());
-        // Unrealized gain/loss: (10 * 120) - 1000 = 200
-        assertEquals(new BigDecimal("200.00"), entity.getUnrealizedGainLoss());
-    }
+        Position position = mapper.toDomain(entity);
 
-    @Test
-    void testToEntityWithNulls() {
-        Position position = new Position();
-        // All fields null
-        PositionEntity entity = mapper.toEntity(position);
-        assertNotNull(entity);
-        assertNull(entity.getId());
-        assertNull(entity.getTicker());
-        assertNull(entity.getCurrentQuantity());
-        assertNull(entity.getAvgCostPerShare());
-        assertNull(entity.getTotalCostBasis());
-        assertNull(entity.getCurrentPrice());
-        assertNull(entity.getPrimaryCurrency());
-        assertNull(entity.getLastTransactionDate());
-        assertNull(entity.getFirstPurchaseDate());
-        assertNull(entity.getUnrealizedGainLoss());
-    }
-
-    @Test
-    void testToEntityUnrealizedGainLossNullIfMissingFields() {
-        Position position = new Position();
-        position.setTotalQuantity(new BigDecimal("10.0"));
-        // Missing currentPrice and totalCost
-        PositionEntity entity = mapper.toEntity(position);
-        assertNull(entity.getUnrealizedGainLoss());
+        assertEquals("AAPL", position.getTicker());
+        assertEquals(BigDecimal.valueOf(100), position.getTotalQuantity());
+        assertEquals(BigDecimal.valueOf(150), position.getAveragePrice());
+        assertEquals(BigDecimal.valueOf(20), position.getTotalCost());
+        assertEquals(BigDecimal.valueOf(1000), position.getMarketValue());
+        assertEquals(Currency.USD, position.getCurrency());
+        assertEquals(now, position.getLastUpdated());
+        assertEquals(BigDecimal.valueOf(980), position.getUnrealizedGainLoss());
     }
 } 

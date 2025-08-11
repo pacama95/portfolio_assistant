@@ -21,7 +21,7 @@ CREATE TABLE transactions (
     commission_currency currency_type,
     drip_confirmed BOOLEAN DEFAULT FALSE,
     is_fractional BOOLEAN DEFAULT FALSE,
-    fractional_multiplier DECIMAL(10, 8) DEFAULT 1.0,
+    fractional_multiplier DECIMAL(10, 8) DEFAULT 1.0, -- TODO: use this when fractional transactions are detected to adjust the input market price
     notes TEXT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
@@ -98,25 +98,24 @@ RETURNS VOID AS $$
 DECLARE
     position_data RECORD;
 BEGIN
-    -- Calculate position data from transactions using actual shares for fractional transactions
+    -- Calculate position data from transactions
     SELECT 
         ticker_symbol as ticker,
-        -- Use actual shares: quantity * fractional_multiplier for fractional, just quantity for regular
         SUM(CASE WHEN transaction_type = 'BUY' 
-                 THEN (quantity * fractional_multiplier) 
-                 ELSE -(quantity * fractional_multiplier) END) as total_quantity,
+                 THEN quantity 
+                 ELSE -(quantity) END) as total_quantity,
         -- Calculate weighted average cost using actual shares
         SUM(CASE WHEN transaction_type = 'BUY' 
-                 THEN (quantity * fractional_multiplier) * cost_per_share + COALESCE(commission, 0) 
+                 THEN quantity * cost_per_share + COALESCE(commission, 0) 
                  ELSE 0 END) / 
         NULLIF(SUM(CASE WHEN transaction_type = 'BUY' 
-                        THEN (quantity * fractional_multiplier) 
+                        THEN (quantity) 
                         ELSE 0 END), 0) as avg_cost,
         (SELECT currency FROM transactions WHERE ticker = ticker_symbol AND transaction_type = 'BUY' ORDER BY transaction_date LIMIT 1) as primary_currency,
-        -- Calculate total cost basis using actual shares
+        -- Calculate total cost basis
         SUM(CASE WHEN transaction_type = 'BUY' 
-                 THEN (quantity * fractional_multiplier) * cost_per_share + COALESCE(commission, 0)
-                 ELSE -(quantity * fractional_multiplier) * cost_per_share - COALESCE(commission, 0) END) as total_cost_basis,
+                 THEN (quantity) * cost_per_share + COALESCE(commission, 0)
+                 ELSE -(quantity) * cost_per_share - COALESCE(commission, 0) END) as total_cost_basis,
         SUM(COALESCE(commission, 0)) as total_commissions,
         MIN(CASE WHEN transaction_type = 'BUY' THEN transaction_date END) as first_purchase,
         MAX(transaction_date) as last_transaction

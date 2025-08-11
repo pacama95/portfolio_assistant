@@ -30,9 +30,9 @@ class PositionMapperTest {
 
         PositionResponse resp = mapper.toResponse(pos);
 
-        assertEquals(new BigDecimal("10.123457"), resp.getTotalQuantity()); // scale 6
-        assertEquals(new BigDecimal("100.9877"), resp.getAveragePrice()); // scale 4
-        assertEquals(new BigDecimal("101.2346"), resp.getCurrentPrice()); // scale 4
-        assertEquals(new BigDecimal("1010.9877"), resp.getTotalCost()); // scale 4
+        assertEquals(new BigDecimal("10.123457"), resp.totalQuantity()); // scale 6
+        assertEquals(new BigDecimal("100.9877"), resp.averagePrice()); // scale 4
+        assertEquals(new BigDecimal("101.2346"), resp.currentPrice()); // scale 4
+        assertEquals(new BigDecimal("1010.9877"), resp.totalCost()); // scale 4
     }
 } 

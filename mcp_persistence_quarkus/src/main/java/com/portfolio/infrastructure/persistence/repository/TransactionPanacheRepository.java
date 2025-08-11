@@ -32,11 +32,6 @@ public class TransactionPanacheRepository implements PanacheRepository<Transacti
     }
 
     @WithSession
-    public Uni<List<TransactionEntity>> findAllActive() {
-        return find("ORDER BY transactionDate DESC").list();
-    }
-
-    @WithSession
     public Uni<List<TransactionEntity>> findAllOrderedByDate() {
         return find("ORDER BY transactionDate DESC").list();
     }

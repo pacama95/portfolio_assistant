@@ -3,6 +3,7 @@ package com.portfolio.domain.model;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.UUID;
+import java.math.RoundingMode;
 
 /**
  * Position domain entity representing an aggregated position for a ticker
@@ -63,7 +64,7 @@ public class Position {
         if (totalCost == null || totalCost.compareTo(BigDecimal.ZERO) == 0) {
             return BigDecimal.ZERO;
         }
-        return getUnrealizedGainLoss().divide(totalCost, 6, BigDecimal.ROUND_HALF_UP).multiply(BigDecimal.valueOf(100));
+        return getUnrealizedGainLoss().divide(totalCost, 6, RoundingMode.HALF_UP).multiply(BigDecimal.valueOf(100));
     }
 
     // Getters and setters

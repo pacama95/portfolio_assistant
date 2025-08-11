@@ -29,11 +29,6 @@ public interface TransactionRepository {
     Uni<List<Transaction>> findByTicker(String ticker);
 
     /**
-     * Finds all active transactions
-     */
-    Uni<List<Transaction>> findAllActive();
-
-    /**
      * Finds all transactions (active and inactive)
      */
     Uni<List<Transaction>> findAll();

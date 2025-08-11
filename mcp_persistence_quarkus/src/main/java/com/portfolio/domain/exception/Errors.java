@@ -34,4 +34,28 @@ public interface Errors {
         Error PERSISTENCE_ERROR = new Error(errorCode + "03");
     }
 
+    interface  CreateTransaction {
+        String errorCode = "05";
+
+        Error INVALID_INPUT = new Error(errorCode + "01");
+        Error NOT_FOUND = new Error(errorCode + "02");
+        Error PERSISTENCE_ERROR = new Error(errorCode + "03");
+    }
+
+    interface  DeleteTransaction {
+        String errorCode = "06";
+
+        Error INVALID_INPUT = new Error(errorCode + "01");
+        Error NOT_FOUND = new Error(errorCode + "02");
+        Error PERSISTENCE_ERROR = new Error(errorCode + "03");
+    }
+
+    interface  UpdateTransaction {
+        String errorCode = "07";
+
+        Error INVALID_INPUT = new Error(errorCode + "01");
+        Error NOT_FOUND = new Error(errorCode + "02");
+        Error PERSISTENCE_ERROR = new Error(errorCode + "03");
+    }
+
 }

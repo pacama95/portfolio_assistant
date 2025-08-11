@@ -6,8 +6,7 @@ package com.portfolio.domain.model;
 public enum TransactionType {
     BUY("Buy"),
     SELL("Sell"),
-    DIVIDEND("Dividend"),
-    SPLIT("Stock Split");
+    DIVIDEND("Dividend");
 
     private final String displayName;
 

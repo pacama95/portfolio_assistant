@@ -8,16 +8,7 @@ import java.math.BigDecimal;
 
 @Mapper(componentModel = "cdi")
 public interface PositionEntityMapper {
-    @Mapping(target = "currentQuantity", source = "totalQuantity")
-    @Mapping(target = "avgCostPerShare", source = "averagePrice")
-    @Mapping(target = "totalCostBasis", source = "totalCost")
-    @Mapping(target = "primaryCurrency", source = "currency")
-    @Mapping(target = "lastTransactionDate", source = "lastUpdated")
-    @Mapping(target = "firstPurchaseDate", source = "lastUpdated")
-    @Mapping(target = "currentMarketValue", source = "currentPrice")
-    @Mapping(target = "unrealizedGainLoss", expression = "java(mapUnrealizedGainLoss(position))")
-    PositionEntity toEntity(Position position);
-
+    
     @Mapping(target = "totalQuantity", source = "currentQuantity")
     @Mapping(target = "averagePrice", source = "avgCostPerShare")
     @Mapping(target = "totalCost", source = "totalCostBasis")
