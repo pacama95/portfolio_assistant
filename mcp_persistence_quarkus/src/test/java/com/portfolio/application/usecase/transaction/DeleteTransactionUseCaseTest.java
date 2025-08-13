@@ -188,30 +188,38 @@ class DeleteTransactionUseCaseTest {
     }
 
     private Transaction createTransaction(UUID id) {
-        Transaction transaction = new Transaction(
+        return new Transaction(
+            id,
             "AAPL",
             TransactionType.BUY,
             new BigDecimal("10"),
             new BigDecimal("150.50"),
+            new BigDecimal("9.99"),
             Currency.USD,
-            LocalDate.of(2024, 1, 15)
+            LocalDate.of(2024, 1, 15),
+            "Test transaction",
+            true,
+            false,
+            BigDecimal.ONE,
+            null
         );
-        transaction.setId(id);
-        transaction.setFees(new BigDecimal("9.99"));
-        transaction.setNotes("Test transaction");
-        return transaction;
     }
 
     private Transaction createTransactionWithType(UUID id, TransactionType type) {
-        Transaction transaction = new Transaction(
+        return new Transaction(
+            id,
             "TSLA",
             type,
             new BigDecimal("5"),
             new BigDecimal("250.00"),
+            BigDecimal.ZERO,
             Currency.USD,
-            LocalDate.of(2024, 2, 1)
+            LocalDate.of(2024, 2, 1),
+            null,
+            true,
+            false,
+            BigDecimal.ONE,
+            null
         );
-        transaction.setId(id);
-        return transaction;
     }
 }

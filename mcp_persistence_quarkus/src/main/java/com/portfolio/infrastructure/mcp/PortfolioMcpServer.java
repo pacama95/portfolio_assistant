@@ -1,6 +1,7 @@
 package com.portfolio.infrastructure.mcp;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.portfolio.application.command.CreateTransactionCommand;
 import com.portfolio.application.command.UpdateTransactionCommand;
 import com.portfolio.application.usecase.portfolio.GetPortfolioSummaryUseCase;
 import com.portfolio.application.usecase.position.GetPositionUseCase;
@@ -11,7 +12,6 @@ import com.portfolio.application.usecase.transaction.DeleteTransactionUseCase;
 import com.portfolio.application.usecase.transaction.GetTransactionUseCase;
 import com.portfolio.application.usecase.transaction.UpdateTransactionUseCase;
 import com.portfolio.domain.model.Currency;
-import com.portfolio.domain.model.Transaction;
 import com.portfolio.domain.model.TransactionType;
 import com.portfolio.util.StringUtils;
 import io.quarkiverse.mcp.server.Tool;
@@ -79,21 +79,21 @@ public class PortfolioMcpServer {
             BigDecimal feesBD = toBigDecimal(fees);
             BigDecimal fractionalMultiplierBD = toBigDecimal(fractionalMultiplier);
 
-            Transaction transaction = new Transaction(
+            CreateTransactionCommand command = new CreateTransactionCommand(
                     ticker,
                     transactionType,
                     quantityBD,
                     priceBD,
+                    feesBD,
                     currency,
-                    transactionDate
+                    transactionDate,
+                    notes,
+                    isFractional,
+                    fractionalMultiplierBD,
+                    commissionCurrency
             );
-            transaction.setFees(feesBD);
-            transaction.setNotes(notes);
-            transaction.setIsFractional(isFractional);
-            transaction.setFractionalMultiplier(fractionalMultiplierBD);
-            transaction.setCommissionCurrency(commissionCurrency);
 
-            return createTransactionUseCase.execute(transaction)
+            return createTransactionUseCase.execute(command)
                     .map(result -> {
                         try {
                             return objectMapper.writeValueAsString(result);
@@ -126,22 +126,22 @@ public class PortfolioMcpServer {
     @Tool(description = "Update an existing transaction.")
     public Uni<String> updateTransaction(
             @ToolArg(description = "Transaction ID to update (UUID format)") String transactionId,
-            @ToolArg(description = "Stock ticker symbol") String ticker,
-            @ToolArg(description = "Transaction type (BUY, SELL, DIVIDEND)") String type,
-            @ToolArg(description = "Quantity of shares") Object quantity,
-            @ToolArg(description = "Price per share") Object price,
+            @ToolArg(description = "Stock ticker symbol", required = false) String ticker,
+            @ToolArg(description = "Transaction type (BUY, SELL, DIVIDEND)", required = false, defaultValue = "BUY") String type,
+            @ToolArg(description = "Quantity of shares", required = false) Object quantity,
+            @ToolArg(description = "Price per share", required = false) Object price,
             @ToolArg(description = "Fees paid per transaction", required = false) Object fees,
             @ToolArg(description = "Determine if this is an operation on a stock fraction (for fractional offerings)", required = false, defaultValue = "false") boolean isFractional,
             @ToolArg(description = "Fraction of the real stock option represented by this fractional offered option", required = false) Object fractionalMultiplier,
             @ToolArg(description = "Fees currency", required = false, defaultValue = "USD") Currency commissionCurrency,
-            @ToolArg(description = "Transaction currency") Currency currency,
-            @ToolArg(description = "Transaction date (YYYY-MM-DD)") String date,
+            @ToolArg(description = "Transaction currency", required = false, defaultValue = "USD") Currency currency,
+            @ToolArg(description = "Transaction date (YYYY-MM-DD)", required = false) String date,
             @ToolArg(description = "Transaction notes", required = false) String notes) {
         
         try {
             // TODO: Define default value converters for BigDecimal and Currency
-            TransactionType transactionType = TransactionType.valueOf(type.toUpperCase());
-            LocalDate transactionDate = LocalDate.parse(date);
+            TransactionType transactionType = StringUtils.hasMeaningfulContent(date) ? TransactionType.valueOf(type.toUpperCase()) : null;
+            LocalDate transactionDate = StringUtils.hasMeaningfulContent(date) ? LocalDate.parse(date) : null;
             BigDecimal quantityBD = toBigDecimal(quantity);
             BigDecimal priceBD = toBigDecimal(price);
             BigDecimal feesBD = toBigDecimal(fees);

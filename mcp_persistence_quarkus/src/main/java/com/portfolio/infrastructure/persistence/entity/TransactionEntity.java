@@ -1,17 +1,18 @@
 package com.portfolio.infrastructure.persistence.entity;
 
 import com.portfolio.domain.model.Currency;
+import com.portfolio.domain.model.Default;
 import com.portfolio.domain.model.TransactionType;
 import jakarta.persistence.*;
+import lombok.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 
-/**
- * JPA entity for the transactions table
- */
+@Setter
+@Getter
 @Entity
 @Table(
     name = "transactions",
@@ -21,8 +22,11 @@ import java.util.UUID;
         @Index(name = "idx_transactions_ticker_date", columnList = "ticker,transaction_date")
     }
 )
+@NoArgsConstructor(force = true)
+@AllArgsConstructor(onConstructor = @__({@Default}))
 public class TransactionEntity {
 
+    // Getters and setters
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     @Column(name = "id")
@@ -73,10 +77,6 @@ public class TransactionEntity {
     @Column(name = "updated_at")
     private OffsetDateTime updatedAt;
 
-    // Default constructor
-    public TransactionEntity() {
-    }
-
     @PrePersist
     protected void onCreate() {
         createdAt = OffsetDateTime.now();
@@ -88,49 +88,4 @@ public class TransactionEntity {
         updatedAt = OffsetDateTime.now();
     }
 
-    // Getters and setters
-    public UUID getId() { return id; }
-    public void setId(UUID id) { this.id = id; }
-
-    public String getTicker() { return ticker; }
-    public void setTicker(String ticker) { this.ticker = ticker; }
-
-    public TransactionType getTransactionType() { return transactionType; }
-    public void setTransactionType(TransactionType transactionType) { this.transactionType = transactionType; }
-
-    public BigDecimal getQuantity() { return quantity; }
-    public void setQuantity(BigDecimal quantity) { this.quantity = quantity; }
-
-    public BigDecimal getCostPerShare() { return costPerShare; }
-    public void setCostPerShare(BigDecimal costPerShare) { this.costPerShare = costPerShare; }
-
-    public Currency getCurrency() { return currency; }
-    public void setCurrency(Currency currency) { this.currency = currency; }
-
-    public LocalDate getTransactionDate() { return transactionDate; }
-    public void setTransactionDate(LocalDate transactionDate) { this.transactionDate = transactionDate; }
-
-    public BigDecimal getCommission() { return commission; }
-    public void setCommission(BigDecimal commission) { this.commission = commission; }
-
-    public Currency getCommissionCurrency() { return commissionCurrency; }
-    public void setCommissionCurrency(Currency commissionCurrency) { this.commissionCurrency = commissionCurrency; }
-
-    public Boolean getDripConfirmed() { return dripConfirmed; }
-    public void setDripConfirmed(Boolean dripConfirmed) { this.dripConfirmed = dripConfirmed; }
-
-    public Boolean getIsFractional() { return isFractional; }
-    public void setIsFractional(Boolean isFractional) { this.isFractional = isFractional; }
-
-    public BigDecimal getFractionalMultiplier() { return fractionalMultiplier; }
-    public void setFractionalMultiplier(BigDecimal fractionalMultiplier) { this.fractionalMultiplier = fractionalMultiplier; }
-
-    public String getNotes() { return notes; }
-    public void setNotes(String notes) { this.notes = notes; }
-
-    public OffsetDateTime getCreatedAt() { return createdAt; }
-    public void setCreatedAt(OffsetDateTime createdAt) { this.createdAt = createdAt; }
-
-    public OffsetDateTime getUpdatedAt() { return updatedAt; }
-    public void setUpdatedAt(OffsetDateTime updatedAt) { this.updatedAt = updatedAt; }
-} 
+}

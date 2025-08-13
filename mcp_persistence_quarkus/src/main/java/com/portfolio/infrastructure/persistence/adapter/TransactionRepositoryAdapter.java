@@ -34,13 +34,14 @@ public class TransactionRepositoryAdapter implements TransactionRepository {
     public Uni<Transaction> save(Transaction transaction) {
         return Uni.createFrom().item(() -> transactionEntityMapper.toEntity(transaction))
                 .flatMap(panacheRepository::persistAndFlush)
-                .map(transactionEntityMapper::toDomain);
+                .map(transactionEntity ->
+                        transactionEntityMapper.toDomain(transactionEntity, transaction.getDomainEvents()));
     }
 
     @Override
     public Uni<Transaction> findById(UUID id) {
         return panacheRepository.findById(id)
-            .map(entity -> entity != null ? transactionEntityMapper.toDomain(entity) : null);
+            .map(transactionEntityMapper::toDomain);
     }
 
     @Override
@@ -73,8 +74,11 @@ public class TransactionRepositoryAdapter implements TransactionRepository {
     @Override
     public Uni<Transaction> update(Transaction transaction) {
         return Uni.createFrom().item(() -> transactionEntityMapper.toEntity(transaction))
+                .flatMap(transactionEntity ->
+                        panacheRepository.getSession().flatMap(session -> session.merge(transactionEntity)))
                 .flatMap(panacheRepository::persistAndFlush)
-                .map(transactionEntityMapper::toDomain);
+                .map(transactionEntity ->
+                        transactionEntityMapper.toDomain(transactionEntity, transaction.popEvents()));
     }
 
     @Override

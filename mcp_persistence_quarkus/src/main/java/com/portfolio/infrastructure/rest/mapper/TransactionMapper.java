@@ -1,5 +1,6 @@
 package com.portfolio.infrastructure.rest.mapper;
 
+import com.portfolio.application.command.CreateTransactionCommand;
 import com.portfolio.application.command.UpdateTransactionCommand;
 import com.portfolio.domain.model.Transaction;
 import com.portfolio.infrastructure.rest.dto.CreateTransactionRequest;
@@ -29,7 +30,7 @@ public interface TransactionMapper {
     @Mapping(target = "price", expression = "java(normalizeMonetary(createTransactionRequest.price()))")
     @Mapping(target = "fees", expression = "java(normalizeMonetary(createTransactionRequest.fees()))")
     @Mapping(target = "fractionalMultiplier", expression = "java(normalizeMonetary(createTransactionRequest.fractionalMultiplier()))")
-    Transaction toTransaction(CreateTransactionRequest createTransactionRequest);
+    CreateTransactionCommand toCreateTransactionCommand(CreateTransactionRequest createTransactionRequest);
 
     @Mapping(target = "quantity", expression = "java(normalizeQuantity(updateTransactionRequest.quantity()))")
     @Mapping(target = "price", expression = "java(normalizeMonetary(updateTransactionRequest.price()))")

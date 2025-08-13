@@ -437,42 +437,54 @@ class GetTransactionUseCaseTest {
     }
 
     private Transaction createTransaction(UUID id, String ticker) {
-        Transaction transaction = new Transaction(
+        return new Transaction(
+            id,
             ticker,
             TransactionType.BUY,
             new BigDecimal("10"),
             new BigDecimal("150.50"),
+            new BigDecimal("9.99"),
             Currency.USD,
-            LocalDate.of(2024, 1, 15)
+            LocalDate.of(2024, 1, 15),
+            "Test transaction",
+            true,
+            false,
+            BigDecimal.ONE,
+            null
         );
-        transaction.setId(id);
-        transaction.setFees(new BigDecimal("9.99"));
-        transaction.setNotes("Test transaction");
-        return transaction;
     }
 
     private Transaction createActiveTransaction(UUID id, String ticker) {
-        Transaction transaction = createTransaction(id, ticker);
-        transaction.setIsActive(true);
-        return transaction;
+        Transaction base = createTransaction(id, ticker);
+        return new Transaction(base.getId(), base.getTicker(), base.getTransactionType(), base.getQuantity(), 
+                              base.getPrice(), base.getFees(), base.getCurrency(), base.getTransactionDate(), 
+                              base.getNotes(), true, base.getIsFractional(), base.getFractionalMultiplier(), 
+                              base.getCommissionCurrency());
     }
 
     private Transaction createInactiveTransaction(UUID id, String ticker) {
-        Transaction transaction = createTransaction(id, ticker);
-        transaction.setIsActive(false);
-        return transaction;
+        Transaction base = createTransaction(id, ticker);
+        return new Transaction(base.getId(), base.getTicker(), base.getTransactionType(), base.getQuantity(), 
+                              base.getPrice(), base.getFees(), base.getCurrency(), base.getTransactionDate(), 
+                              base.getNotes(), false, base.getIsFractional(), base.getFractionalMultiplier(), 
+                              base.getCommissionCurrency());
     }
 
     private Transaction createTransactionWithType(UUID id, String ticker, TransactionType type) {
-        Transaction transaction = new Transaction(
+        return new Transaction(
+            id,
             ticker,
             type,
             new BigDecimal("5"),
             new BigDecimal("250.00"),
+            BigDecimal.ZERO,
             Currency.USD,
-            LocalDate.of(2024, 2, 1)
+            LocalDate.of(2024, 2, 1),
+            null,
+            true,
+            false,
+            BigDecimal.ONE,
+            null
         );
-        transaction.setId(id);
-        return transaction;
     }
 }

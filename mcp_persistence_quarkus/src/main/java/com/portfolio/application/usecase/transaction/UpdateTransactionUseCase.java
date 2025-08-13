@@ -11,8 +11,6 @@ import io.smallrye.mutiny.Uni;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
-import java.util.UUID;
-
 @ApplicationScoped
 public class UpdateTransactionUseCase {
 
@@ -29,22 +27,24 @@ public class UpdateTransactionUseCase {
     }
 
     private Uni<Transaction> updateAndPersistTransaction(Transaction current, UpdateTransactionCommand updateTransactionCommand) {
-        return Uni.createFrom().item(()  -> updateTransaction(current, updateTransactionCommand))
-                .flatMap(transactionUpdated -> transactionRepository.update(transactionUpdated));
-    }
-
-    private Transaction updateTransaction(Transaction current, UpdateTransactionCommand updateTransactionCommand) {
-        if (StringUtils.hasMeaningfulContent(updateTransactionCommand.ticker())) current.setTicker(updateTransactionCommand.ticker());
-        if (updateTransactionCommand.transactionType() != null) current.setTransactionType(updateTransactionCommand.transactionType());
-        if (updateTransactionCommand.transactionDate() != null) current.setTransactionDate(updateTransactionCommand.transactionDate());
-        if (StringUtils.hasMeaningfulContent(updateTransactionCommand.notes())) current.setNotes(updateTransactionCommand.notes());
-        if (updateTransactionCommand.price() != null) current.setPrice(updateTransactionCommand.price());
-        if (updateTransactionCommand.quantity() != null) current.setQuantity(updateTransactionCommand.quantity());
-        if (updateTransactionCommand.currency() != null) current.setCurrency(updateTransactionCommand.currency());
-        if(updateTransactionCommand.fractionalMultiplier() != null) current.setFractionalMultiplier(updateTransactionCommand.fractionalMultiplier());
-        if(updateTransactionCommand.commissionCurrency() != null) current.setCommissionCurrency(updateTransactionCommand.commissionCurrency());
-        current.setIsFractional(updateTransactionCommand.isFractional());
-
-        return current;
+        return Uni.createFrom().item(() -> {
+            current.update(
+                StringUtils.hasMeaningfulContent(updateTransactionCommand.ticker()) 
+                    ? updateTransactionCommand.ticker() : null,
+                updateTransactionCommand.transactionType(),
+                updateTransactionCommand.quantity(),
+                updateTransactionCommand.price(),
+                updateTransactionCommand.fees(),
+                updateTransactionCommand.currency(),
+                updateTransactionCommand.transactionDate(),
+                StringUtils.hasMeaningfulContent(updateTransactionCommand.notes()) 
+                    ? updateTransactionCommand.notes() : null,
+                updateTransactionCommand.isFractional(),
+                updateTransactionCommand.fractionalMultiplier(),
+                updateTransactionCommand.commissionCurrency()
+            );
+            return current;
+        })
+        .flatMap(transactionUpdated -> transactionRepository.update(transactionUpdated));
     }
 } 

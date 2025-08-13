@@ -5,6 +5,7 @@ pluginManagement {
     }
     plugins {
         id 'io.quarkus' version '3.16.4'
+        id "io.freefair.lombok" version "$lombokPluginVersion"
     }
 }
 rootProject.name='mcp_persistence_quarkus' 

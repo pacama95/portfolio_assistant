@@ -6,11 +6,15 @@ import com.portfolio.domain.model.TransactionType;
 import com.portfolio.infrastructure.persistence.entity.TransactionEntity;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.mapstruct.factory.Mappers;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.UUID;
+import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -24,17 +28,22 @@ class TransactionEntityMapperTest {
 
     @Test
     void testToEntityFullMapping() {
-        Transaction transaction = new Transaction();
         UUID id = UUID.randomUUID();
-        transaction.setId(id);
-        transaction.setTicker("AAPL");
-        transaction.setTransactionType(TransactionType.BUY);
-        transaction.setQuantity(new BigDecimal("10.0"));
-        transaction.setPrice(new BigDecimal("100.0"));
-        transaction.setFees(new BigDecimal("5.0"));
-        transaction.setCurrency(Currency.USD);
-        transaction.setTransactionDate(LocalDate.of(2024, 6, 1));
-        transaction.setNotes("Test note");
+        Transaction transaction = new Transaction(
+            id,
+            "AAPL",
+            TransactionType.BUY,
+            new BigDecimal("10.0"),
+            new BigDecimal("100.0"),
+            new BigDecimal("5.0"),
+            Currency.USD,
+            LocalDate.of(2024, 6, 1),
+            "Test note",
+            true,
+            false,
+            BigDecimal.ONE,
+            Currency.USD
+        );
 
         TransactionEntity entity = mapper.toEntity(transaction);
         assertNotNull(entity);
@@ -47,11 +56,28 @@ class TransactionEntityMapperTest {
         assertEquals(Currency.USD, entity.getCurrency());
         assertEquals(LocalDate.of(2024, 6, 1), entity.getTransactionDate());
         assertEquals("Test note", entity.getNotes());
+        assertEquals(Currency.USD, entity.getCommissionCurrency());
+        assertEquals(false, entity.getIsFractional());
+        assertEquals(BigDecimal.ONE, entity.getFractionalMultiplier());
     }
 
     @Test
     void testToEntityWithNulls() {
-        Transaction transaction = new Transaction();
+        Transaction transaction = new Transaction(
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+        );
         TransactionEntity entity = mapper.toEntity(transaction);
         assertNotNull(entity);
         assertNull(entity.getId());
@@ -63,6 +89,9 @@ class TransactionEntityMapperTest {
         assertNull(entity.getCurrency());
         assertNull(entity.getTransactionDate());
         assertNull(entity.getNotes());
+        assertNull(entity.getCommissionCurrency());
+        assertNull(entity.getIsFractional());
+        assertNull(entity.getFractionalMultiplier());
     }
 
     @Test
@@ -78,6 +107,9 @@ class TransactionEntityMapperTest {
         entity.setCurrency(Currency.CAD);
         entity.setTransactionDate(LocalDate.of(2024, 5, 15));
         entity.setNotes("Domain test");
+        entity.setCommissionCurrency(Currency.EUR);
+        entity.setIsFractional(true);
+        entity.setFractionalMultiplier(new BigDecimal("0.5"));
 
         Transaction transaction = mapper.toDomain(entity);
         assertNotNull(transaction);
@@ -90,5 +122,75 @@ class TransactionEntityMapperTest {
         assertEquals(Currency.CAD, transaction.getCurrency());
         assertEquals(LocalDate.of(2024, 5, 15), transaction.getTransactionDate());
         assertEquals("Domain test", transaction.getNotes());
+        assertEquals(Currency.EUR, transaction.getCommissionCurrency());
+        assertEquals(true, transaction.getIsFractional());
+        assertEquals(new BigDecimal("0.5"), transaction.getFractionalMultiplier());
+    }
+
+    @ParameterizedTest
+    @MethodSource("provideTransactionEntityMappingTestCases")
+    void testFieldMappings(String testName, Transaction transaction, TransactionEntity expectedEntity) {
+        TransactionEntity actualEntity = mapper.toEntity(transaction);
+        
+        assertNotNull(actualEntity, testName + ": Entity should not be null");
+        assertEquals(expectedEntity.getId(), actualEntity.getId(), testName + ": ID mismatch");
+        assertEquals(expectedEntity.getTicker(), actualEntity.getTicker(), testName + ": Ticker mismatch");
+        assertEquals(expectedEntity.getTransactionType(), actualEntity.getTransactionType(), testName + ": TransactionType mismatch");
+        assertEquals(expectedEntity.getQuantity(), actualEntity.getQuantity(), testName + ": Quantity mismatch");
+        assertEquals(expectedEntity.getCostPerShare(), actualEntity.getCostPerShare(), testName + ": Price mapping mismatch");
+        assertEquals(expectedEntity.getCommission(), actualEntity.getCommission(), testName + ": Fees mapping mismatch");
+        assertEquals(expectedEntity.getCurrency(), actualEntity.getCurrency(), testName + ": Currency mismatch");
+        assertEquals(expectedEntity.getTransactionDate(), actualEntity.getTransactionDate(), testName + ": TransactionDate mismatch");
+        assertEquals(expectedEntity.getNotes(), actualEntity.getNotes(), testName + ": Notes mismatch");
+        assertEquals(expectedEntity.getCommissionCurrency(), actualEntity.getCommissionCurrency(), testName + ": CommissionCurrency mismatch");
+        assertEquals(expectedEntity.getIsFractional(), actualEntity.getIsFractional(), testName + ": IsFractional mismatch");
+        assertEquals(expectedEntity.getFractionalMultiplier(), actualEntity.getFractionalMultiplier(), testName + ": FractionalMultiplier mismatch");
+    }
+
+    static Stream<Arguments> provideTransactionEntityMappingTestCases() {
+        UUID id1 = UUID.randomUUID();
+        Transaction transaction1 = new Transaction(
+            id1, "TSLA", TransactionType.BUY, new BigDecimal("5.0"), new BigDecimal("250.0"), 
+            new BigDecimal("1.0"), Currency.EUR, LocalDate.of(2024, 3, 1), "Buy Tesla", 
+            true, true, new BigDecimal("2.0"), Currency.GBP
+        );
+        TransactionEntity expectedEntity1 = new TransactionEntity();
+        expectedEntity1.setId(id1);
+        expectedEntity1.setTicker("TSLA");
+        expectedEntity1.setTransactionType(TransactionType.BUY);
+        expectedEntity1.setQuantity(new BigDecimal("5.0"));
+        expectedEntity1.setCostPerShare(new BigDecimal("250.0"));
+        expectedEntity1.setCommission(new BigDecimal("1.0"));
+        expectedEntity1.setCurrency(Currency.EUR);
+        expectedEntity1.setTransactionDate(LocalDate.of(2024, 3, 1));
+        expectedEntity1.setNotes("Buy Tesla");
+        expectedEntity1.setCommissionCurrency(Currency.GBP);
+        expectedEntity1.setIsFractional(true);
+        expectedEntity1.setFractionalMultiplier(new BigDecimal("2.0"));
+
+        UUID id2 = UUID.randomUUID();
+        Transaction transaction2 = new Transaction(
+            id2, "GOOGL", TransactionType.SELL, new BigDecimal("1.5"), new BigDecimal("3000.0"), 
+            new BigDecimal("15.0"), Currency.USD, LocalDate.of(2024, 4, 15), "Sell Google", 
+            true, false, BigDecimal.ONE, null
+        );
+        TransactionEntity expectedEntity2 = new TransactionEntity();
+        expectedEntity2.setId(id2);
+        expectedEntity2.setTicker("GOOGL");
+        expectedEntity2.setTransactionType(TransactionType.SELL);
+        expectedEntity2.setQuantity(new BigDecimal("1.5"));
+        expectedEntity2.setCostPerShare(new BigDecimal("3000.0"));
+        expectedEntity2.setCommission(new BigDecimal("15.0"));
+        expectedEntity2.setCurrency(Currency.USD);
+        expectedEntity2.setTransactionDate(LocalDate.of(2024, 4, 15));
+        expectedEntity2.setNotes("Sell Google");
+        expectedEntity2.setCommissionCurrency(null);
+        expectedEntity2.setIsFractional(false);
+        expectedEntity2.setFractionalMultiplier(BigDecimal.ONE);
+
+        return Stream.of(
+            Arguments.of("Tesla transaction with fractional and commission currency", transaction1, expectedEntity1),
+            Arguments.of("Google transaction without commission currency", transaction2, expectedEntity2)
+        );
     }
 } 

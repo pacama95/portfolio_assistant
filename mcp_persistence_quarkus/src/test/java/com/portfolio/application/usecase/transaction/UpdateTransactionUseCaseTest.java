@@ -273,21 +273,21 @@ class UpdateTransactionUseCaseTest {
     }
 
     private Transaction createExistingTransaction(UUID id) {
-        Transaction transaction = new Transaction(
+        return new Transaction(
+            id,
             "AAPL",
             TransactionType.BUY,
             new BigDecimal("10"),
             new BigDecimal("150.50"),
+            new BigDecimal("9.99"),
             Currency.USD,
-            LocalDate.of(2024, 1, 15)
+            LocalDate.of(2024, 1, 15),
+            "Original notes",
+            true,
+            false,
+            BigDecimal.ONE,
+            Currency.USD
         );
-        transaction.setId(id);
-        transaction.setFees(new BigDecimal("9.99"));
-        transaction.setNotes("Original notes");
-        transaction.setIsFractional(false);
-        transaction.setFractionalMultiplier(BigDecimal.ONE);
-        transaction.setCommissionCurrency(Currency.USD);
-        return transaction;
     }
 
     private UpdateTransactionCommand createUpdateCommand(UUID transactionId) {
@@ -308,20 +308,20 @@ class UpdateTransactionUseCaseTest {
     }
 
     private Transaction createUpdatedTransaction(UUID id) {
-        Transaction transaction = new Transaction(
+        return new Transaction(
+            id,
             "MSFT",
             TransactionType.SELL,
             new BigDecimal("5"),
             new BigDecimal("420.75"),
+            new BigDecimal("12.50"),
             Currency.EUR,
-            LocalDate.of(2024, 2, 20)
+            LocalDate.of(2024, 2, 20),
+            "Updated transaction notes",
+            true,
+            true,
+            new BigDecimal("0.5"),
+            Currency.GBP
         );
-        transaction.setId(id);
-        transaction.setFees(new BigDecimal("12.50"));
-        transaction.setNotes("Updated transaction notes");
-        transaction.setIsFractional(true);
-        transaction.setFractionalMultiplier(new BigDecimal("0.5"));
-        transaction.setCommissionCurrency(Currency.GBP);
-        return transaction;
     }
 }

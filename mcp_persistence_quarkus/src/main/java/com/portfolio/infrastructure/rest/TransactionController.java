@@ -48,8 +48,8 @@ public class TransactionController {
      */
     @POST
     public Uni<Response> createTransaction(@Valid CreateTransactionRequest request) {
-        return Uni.createFrom().item(() -> transactionMapper.toTransaction(request))
-                .flatMap(transaction -> createTransactionUseCase.execute(transaction))
+        return Uni.createFrom().item(() -> transactionMapper.toCreateTransactionCommand(request))
+                .flatMap(command -> createTransactionUseCase.execute(command))
                 .map(transaction -> transactionMapper.toResponse(transaction))
                 .map(response -> Response.status(Response.Status.CREATED).entity(response).build())
                 .onFailure().recoverWithItem(throwable ->

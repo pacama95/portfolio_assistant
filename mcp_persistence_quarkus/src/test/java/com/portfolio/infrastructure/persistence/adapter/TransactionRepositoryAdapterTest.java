@@ -1,5 +1,6 @@
 package com.portfolio.infrastructure.persistence.adapter;
 
+import com.portfolio.domain.event.DomainEvent;
 import com.portfolio.domain.model.Transaction;
 import com.portfolio.domain.model.TransactionType;
 import com.portfolio.infrastructure.persistence.entity.TransactionEntity;
@@ -32,17 +33,19 @@ class TransactionRepositoryAdapterTest {
     @Test
     void testSave() {
         Transaction transaction = mock(Transaction.class);
+        List<DomainEvent<?>> domainEvents = List.of(mock(DomainEvent.class));
         TransactionEntity entity = mock(TransactionEntity.class);
         when(transactionEntityMapper.toEntity(transaction)).thenReturn(entity);
         when(panacheRepository.persistAndFlush(entity)).thenReturn(Uni.createFrom().item(entity));
-        when(transactionEntityMapper.toDomain(entity)).thenReturn(transaction);
+        when(transaction.getDomainEvents()).thenReturn(domainEvents);
+        when(transactionEntityMapper.toDomain(entity, domainEvents)).thenReturn(transaction);
 
         Uni<Transaction> uni = adapter.save(transaction);
         Transaction result = uni.subscribe().withSubscriber(UniAssertSubscriber.create()).assertCompleted().getItem();
 
         assertEquals(transaction, result);
         verify(transactionEntityMapper).toEntity(transaction);
-        verify(transactionEntityMapper).toDomain(entity);
+        verify(transactionEntityMapper).toDomain(entity, domainEvents);
     }
 
     @Test
@@ -127,17 +130,19 @@ class TransactionRepositoryAdapterTest {
     @Test
     void testUpdate() {
         Transaction transaction = mock(Transaction.class);
+        List<DomainEvent<?>> domainEvents = List.of(mock(DomainEvent.class));
         TransactionEntity entity = mock(TransactionEntity.class);
         when(transactionEntityMapper.toEntity(transaction)).thenReturn(entity);
         when(panacheRepository.persistAndFlush(entity)).thenReturn(Uni.createFrom().item(entity));
-        when(transactionEntityMapper.toDomain(entity)).thenReturn(transaction);
+        when(transaction.getDomainEvents()).thenReturn(domainEvents);
+        when(transactionEntityMapper.toDomain(entity, domainEvents)).thenReturn(transaction);
 
         Uni<Transaction> uni = adapter.update(transaction);
         Transaction result = uni.subscribe().withSubscriber(UniAssertSubscriber.create()).assertCompleted().getItem();
 
         assertEquals(transaction, result);
         verify(transactionEntityMapper).toEntity(transaction);
-        verify(transactionEntityMapper).toDomain(entity);
+        verify(transactionEntityMapper).toDomain(entity, domainEvents);
     }
 
     @Test

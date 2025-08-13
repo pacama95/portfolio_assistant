@@ -1,5 +1,6 @@
 package com.portfolio.application.usecase.transaction;
 
+import com.portfolio.application.command.CreateTransactionCommand;
 import com.portfolio.domain.exception.Errors;
 import com.portfolio.domain.exception.ServiceException;
 import com.portfolio.domain.model.Transaction;
@@ -10,20 +11,29 @@ import io.smallrye.mutiny.Uni;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
-/**
- * Use case for creating new transactions
- */
 @ApplicationScoped
 public class CreateTransactionUseCase {
 
     @Inject
     TransactionRepository transactionRepository;
 
-    /**
-     * Creates a new transaction and updates the corresponding position
-     */
     @WithTransaction
-    public Uni<Transaction> execute(Transaction transaction) {
+    public Uni<Transaction> execute(CreateTransactionCommand command) {
+        Transaction transaction = new Transaction(
+                command.ticker(),
+                command.transactionType(),
+                command.quantity(),
+                command.price(),
+                command.fees(),
+                command.currency(),
+                command.transactionDate(),
+                command.notes(),
+                true,
+                command.isFractional(),
+                command.fractionalMultiplier(),
+                command.commissionCurrency()
+        );
+
         return transactionRepository.save(transaction)
                 .onFailure().transform(throwable -> new ServiceException(Errors.CreateTransaction.PERSISTENCE_ERROR, throwable))
                 .onItem().invoke(saved -> Log.info("Transaction saved for ticker %s".formatted(saved.getTicker())));

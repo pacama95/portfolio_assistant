@@ -21,23 +21,29 @@ class TransactionMapperTest {
 
     @Test
     void testToResponse_normalizesFields() {
-        Transaction tx = new Transaction();
-        tx.setId(java.util.UUID.randomUUID());
-        tx.setTicker("AAPL");
-        tx.setTransactionType(TransactionType.BUY);
-        tx.setQuantity(new BigDecimal("2.9876543"));
-        tx.setPrice(new BigDecimal("456.789123"));
-        tx.setFees(new BigDecimal("1.234567"));
-        tx.setCurrency(Currency.USD);
-        tx.setTransactionDate(LocalDate.of(2024, 2, 2));
-        tx.setNotes("Test2");
-        tx.setIsActive(true);
+        UUID id = UUID.randomUUID();
+        Transaction tx = new Transaction(
+            id,
+            "AAPL",
+            TransactionType.BUY,
+            new BigDecimal("2.9876543"),
+            new BigDecimal("456.789123"),
+            new BigDecimal("1.234567"),
+            Currency.USD,
+            LocalDate.of(2024, 2, 2),
+            "Test2",
+            true,
+            false,
+            new BigDecimal("1.234567"),
+            Currency.USD
+        );
 
         TransactionResponse resp = mapper.toResponse(tx);
 
         assertEquals(new BigDecimal("2.987654"), resp.quantity()); // scale 6
         assertEquals(new BigDecimal("456.7891"), resp.price()); // scale 4
         assertEquals(new BigDecimal("1.2346"), resp.fees()); // scale 4
+        assertEquals(new BigDecimal("1.2346"), resp.fractionalMultiplier()); // scale 4
     }
 
     @Test
