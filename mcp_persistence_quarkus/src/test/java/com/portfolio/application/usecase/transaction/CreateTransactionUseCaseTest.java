@@ -14,6 +14,7 @@ import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.Collections;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -49,7 +50,8 @@ class CreateTransactionUseCaseTest {
             true, // isActive
             command.isFractional(),
             command.fractionalMultiplier(),
-            command.commissionCurrency()
+            command.commissionCurrency(),
+            Collections.emptyList()
         );
 
         when(transactionRepository.save(any(Transaction.class)))
@@ -117,7 +119,8 @@ class CreateTransactionUseCaseTest {
             true, // isActive
             command.isFractional(),
             command.fractionalMultiplier(),
-            command.commissionCurrency()
+            command.commissionCurrency(),
+            Collections.emptyList()
         );
 
         when(transactionRepository.save(any(Transaction.class)))

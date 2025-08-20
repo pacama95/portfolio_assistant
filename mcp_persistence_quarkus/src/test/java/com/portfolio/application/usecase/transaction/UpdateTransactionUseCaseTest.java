@@ -17,6 +17,8 @@ import org.junit.jupiter.params.provider.MethodSource;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.UUID;
 import java.util.stream.Stream;
 
@@ -286,7 +288,8 @@ class UpdateTransactionUseCaseTest {
             true,
             false,
             BigDecimal.ONE,
-            Currency.USD
+            Currency.USD,
+            new ArrayList<>()
         );
     }
 
@@ -321,7 +324,8 @@ class UpdateTransactionUseCaseTest {
             true,
             true,
             new BigDecimal("0.5"),
-            Currency.GBP
+            Currency.GBP,
+            Collections.emptyList()
         );
     }
 }

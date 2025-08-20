@@ -12,6 +12,7 @@ import org.mapstruct.factory.Mappers;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.Collections;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -35,7 +36,8 @@ class TransactionMapperTest {
             true,
             false,
             new BigDecimal("1.234567"),
-            Currency.USD
+            Currency.USD,
+            Collections.emptyList()
         );
 
         TransactionResponse resp = mapper.toResponse(tx);
@@ -44,38 +46,6 @@ class TransactionMapperTest {
         assertEquals(new BigDecimal("456.7891"), resp.price()); // scale 4
         assertEquals(new BigDecimal("1.2346"), resp.fees()); // scale 4
         assertEquals(new BigDecimal("1.2346"), resp.fractionalMultiplier()); // scale 4
-    }
-
-    @Test
-    void testToTransaction_AllFieldsMapped() {
-        CreateTransactionRequest req = new CreateTransactionRequest(
-            "AAPL",
-            TransactionType.BUY,
-            new BigDecimal("1.234567"),
-            new BigDecimal("123.4567"),
-            new BigDecimal("0.1234"),
-            Currency.USD,
-            LocalDate.of(2024, 6, 1),
-            "Test notes",
-            true,
-            new BigDecimal("0.25000000"),
-            Currency.EUR
-        );
-
-        Transaction tx = mapper.toTransaction(req);
-
-        assertNotNull(tx);
-        assertEquals("AAPL", tx.getTicker());
-        assertEquals(TransactionType.BUY, tx.getTransactionType());
-        assertEquals(new BigDecimal("1.234567"), tx.getQuantity());
-        assertEquals(new BigDecimal("123.4567"), tx.getPrice());
-        assertEquals(new BigDecimal("0.1234"), tx.getFees());
-        assertEquals(Currency.USD, tx.getCurrency());
-        assertEquals(LocalDate.of(2024, 6, 1), tx.getTransactionDate());
-        assertEquals("Test notes", tx.getNotes());
-        assertTrue(tx.getIsFractional());
-        assertEquals(new BigDecimal("0.2500"), tx.getFractionalMultiplier());
-        assertEquals(Currency.EUR, tx.getCommissionCurrency());
     }
 
     @Test

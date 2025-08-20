@@ -13,6 +13,7 @@ import org.mapstruct.factory.Mappers;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.Collections;
 import java.util.UUID;
 import java.util.stream.Stream;
 
@@ -42,7 +43,8 @@ class TransactionEntityMapperTest {
             true,
             false,
             BigDecimal.ONE,
-            Currency.USD
+            Currency.USD,
+                Collections.emptyList()
         );
 
         TransactionEntity entity = mapper.toEntity(transaction);
@@ -76,7 +78,8 @@ class TransactionEntityMapperTest {
             null,
             null,
             null,
-            null
+            null,
+                Collections.emptyList()
         );
         TransactionEntity entity = mapper.toEntity(transaction);
         assertNotNull(entity);
@@ -152,7 +155,7 @@ class TransactionEntityMapperTest {
         Transaction transaction1 = new Transaction(
             id1, "TSLA", TransactionType.BUY, new BigDecimal("5.0"), new BigDecimal("250.0"), 
             new BigDecimal("1.0"), Currency.EUR, LocalDate.of(2024, 3, 1), "Buy Tesla", 
-            true, true, new BigDecimal("2.0"), Currency.GBP
+            true, true, new BigDecimal("2.0"), Currency.GBP, Collections.emptyList()
         );
         TransactionEntity expectedEntity1 = new TransactionEntity();
         expectedEntity1.setId(id1);
@@ -172,7 +175,7 @@ class TransactionEntityMapperTest {
         Transaction transaction2 = new Transaction(
             id2, "GOOGL", TransactionType.SELL, new BigDecimal("1.5"), new BigDecimal("3000.0"), 
             new BigDecimal("15.0"), Currency.USD, LocalDate.of(2024, 4, 15), "Sell Google", 
-            true, false, BigDecimal.ONE, null
+            true, false, BigDecimal.ONE, null, Collections.emptyList()
         );
         TransactionEntity expectedEntity2 = new TransactionEntity();
         expectedEntity2.setId(id2);

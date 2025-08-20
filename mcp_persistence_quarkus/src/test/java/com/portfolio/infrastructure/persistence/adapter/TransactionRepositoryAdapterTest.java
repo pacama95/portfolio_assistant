@@ -8,10 +8,12 @@ import com.portfolio.infrastructure.persistence.mapper.TransactionEntityMapper;
 import com.portfolio.infrastructure.persistence.repository.TransactionPanacheRepository;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.helpers.test.UniAssertSubscriber;
+import org.hibernate.reactive.mutiny.Mutiny;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDate;
+import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
@@ -130,19 +132,28 @@ class TransactionRepositoryAdapterTest {
     @Test
     void testUpdate() {
         Transaction transaction = mock(Transaction.class);
-        List<DomainEvent<?>> domainEvents = List.of(mock(DomainEvent.class));
+        List<DomainEvent<?>> domainEvents = Arrays.asList(mock(DomainEvent.class));
         TransactionEntity entity = mock(TransactionEntity.class);
+        TransactionEntity mergedEntity = mock(TransactionEntity.class);
+        Mutiny.Session session = mock(Mutiny.Session.class);
+
         when(transactionEntityMapper.toEntity(transaction)).thenReturn(entity);
-        when(panacheRepository.persistAndFlush(entity)).thenReturn(Uni.createFrom().item(entity));
-        when(transaction.getDomainEvents()).thenReturn(domainEvents);
-        when(transactionEntityMapper.toDomain(entity, domainEvents)).thenReturn(transaction);
+        when(panacheRepository.getSession()).thenReturn(Uni.createFrom().item(session));
+        when(session.merge(entity)).thenReturn(Uni.createFrom().item(mergedEntity));
+        when(panacheRepository.persistAndFlush(mergedEntity)).thenReturn(Uni.createFrom().item(mergedEntity));
+        when(transaction.popEvents()).thenReturn(domainEvents);
+        when(transactionEntityMapper.toDomain(mergedEntity, domainEvents)).thenReturn(transaction);
 
         Uni<Transaction> uni = adapter.update(transaction);
-        Transaction result = uni.subscribe().withSubscriber(UniAssertSubscriber.create()).assertCompleted().getItem();
+        Transaction result = uni.subscribe()
+                .withSubscriber(UniAssertSubscriber.create())
+                .assertCompleted()
+                .getItem();
 
         assertEquals(transaction, result);
         verify(transactionEntityMapper).toEntity(transaction);
-        verify(transactionEntityMapper).toDomain(entity, domainEvents);
+        verify(transactionEntityMapper).toDomain(mergedEntity, domainEvents);
+        verify(panacheRepository).persistAndFlush(mergedEntity);
     }
 
     @Test

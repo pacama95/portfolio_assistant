@@ -16,6 +16,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.Collections;
 import java.util.UUID;
 import java.util.stream.Stream;
 
@@ -201,7 +202,8 @@ class DeleteTransactionUseCaseTest {
             true,
             false,
             BigDecimal.ONE,
-            null
+            null,
+            Collections.emptyList()
         );
     }
 
@@ -219,7 +221,8 @@ class DeleteTransactionUseCaseTest {
             true,
             false,
             BigDecimal.ONE,
-            null
+            null,
+            Collections.emptyList()
         );
     }
 }
