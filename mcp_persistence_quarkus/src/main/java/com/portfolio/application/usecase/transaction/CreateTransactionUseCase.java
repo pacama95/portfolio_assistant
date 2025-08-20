@@ -35,6 +35,7 @@ public class CreateTransactionUseCase {
         );
 
         return transactionRepository.save(transaction)
+                .invoke(Transaction::popEvents) // TODO: Popping events, in the future we should publish this to a queue
                 .onFailure().transform(throwable -> new ServiceException(Errors.CreateTransaction.PERSISTENCE_ERROR, throwable))
                 .onItem().invoke(saved -> Log.info("Transaction saved for ticker %s".formatted(saved.getTicker())));
     }

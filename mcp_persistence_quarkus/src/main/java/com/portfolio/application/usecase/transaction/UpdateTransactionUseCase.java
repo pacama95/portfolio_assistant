@@ -20,6 +20,7 @@ public class UpdateTransactionUseCase {
     @WithTransaction
     public Uni<Transaction> execute(UpdateTransactionCommand updateTransactionCommand) {
         return transactionRepository.findById(updateTransactionCommand.transactionId())
+                .invoke(Transaction::popEvents) // TODO: Popping events, in the future we should publish this to a queue
                 .onItem()
                 .ifNotNull().transformToUni(transaction -> updateAndPersistTransaction(transaction, updateTransactionCommand))
                 .onItem()

@@ -101,21 +101,12 @@ BEGIN
     -- Calculate position data from transactions
     SELECT 
         ticker_symbol as ticker,
-        SUM(CASE WHEN transaction_type = 'BUY' 
-                 THEN quantity 
-                 ELSE -(quantity) END) as total_quantity,
+        SUM(CASE WHEN transaction_type = 'BUY' THEN quantity ELSE -(quantity) END) as total_quantity,
         -- Calculate weighted average cost using actual shares
-        SUM(CASE WHEN transaction_type = 'BUY' 
-                 THEN quantity * cost_per_share + COALESCE(commission, 0) 
-                 ELSE 0 END) / 
-        NULLIF(SUM(CASE WHEN transaction_type = 'BUY' 
-                        THEN (quantity) 
-                        ELSE 0 END), 0) as avg_cost,
+        (SUM(CASE WHEN transaction_type = 'BUY' THEN quantity * cost_per_share ELSE 0 END) + SUM(CASE WHEN transaction_type = 'BUY' THEN COALESCE(commission, 0) ELSE 0 END)) / NULLIF(SUM(CASE WHEN transaction_type = 'BUY' THEN quantity ELSE 0 END), 0) as avg_cost,
         (SELECT currency FROM transactions WHERE ticker = ticker_symbol AND transaction_type = 'BUY' ORDER BY transaction_date LIMIT 1) as primary_currency,
         -- Calculate total cost basis
-        SUM(CASE WHEN transaction_type = 'BUY' 
-                 THEN (quantity) * cost_per_share + COALESCE(commission, 0)
-                 ELSE -(quantity) * cost_per_share - COALESCE(commission, 0) END) as total_cost_basis,
+        SUM(CASE WHEN transaction_type = 'BUY' THEN (quantity) * cost_per_share + COALESCE(commission, 0) ELSE -(quantity) * cost_per_share - COALESCE(commission, 0) END) as total_cost_basis,
         SUM(COALESCE(commission, 0)) as total_commissions,
         MIN(CASE WHEN transaction_type = 'BUY' THEN transaction_date END) as first_purchase,
         MAX(transaction_date) as last_transaction
