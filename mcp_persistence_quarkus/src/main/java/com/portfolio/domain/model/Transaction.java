@@ -78,8 +78,7 @@ public class Transaction {
                        Boolean isFractional,
                        BigDecimal fractionalMultiplier,
                        Currency commissionCurrency) {
-        
-        // Update all fields directly in the current object
+
         if (ticker != null) this.ticker = ticker;
         if (transactionType != null) this.transactionType = transactionType;
         if (quantity != null) this.quantity = quantity;

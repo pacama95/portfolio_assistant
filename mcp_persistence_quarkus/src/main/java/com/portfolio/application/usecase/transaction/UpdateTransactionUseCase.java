@@ -20,9 +20,10 @@ public class UpdateTransactionUseCase {
     @WithTransaction
     public Uni<Transaction> execute(UpdateTransactionCommand updateTransactionCommand) {
         return transactionRepository.findById(updateTransactionCommand.transactionId())
-                .invoke(Transaction::popEvents) // TODO: Popping events, in the future we should publish this to a queue
                 .onItem()
-                .ifNotNull().transformToUni(transaction -> updateAndPersistTransaction(transaction, updateTransactionCommand))
+                .ifNotNull().transformToUni(transaction ->
+                        updateAndPersistTransaction(transaction, updateTransactionCommand)
+                        .invoke(Transaction::popEvents)) // TODO: Popping events, in the future we should publish this to a queue
                 .onItem()
                 .ifNull().failWith(() -> new ServiceException(Errors.UpdateTransaction.NOT_FOUND));
     }
