@@ -1,6 +1,7 @@
 package com.portfolio.infrastructure.rest.mapper;
 
 import com.portfolio.domain.model.Position;
+import com.portfolio.domain.model.CurrentPosition;
 import com.portfolio.infrastructure.rest.dto.PositionResponse;
 import org.mapstruct.*;
 
@@ -24,6 +25,20 @@ public interface PositionMapper {
     PositionResponse toResponse(Position position);
 
     List<PositionResponse> toResponses(List<Position> positions);
+
+    /**
+     * Maps CurrentPosition to PositionResponse with real-time current price
+     */
+    @Mapping(target = "totalQuantity", expression = "java(normalizeQuantity(currentPosition.getTotalQuantity()))")
+    @Mapping(target = "averagePrice", expression = "java(normalizeMonetary(currentPosition.getAveragePrice()))")
+    @Mapping(target = "currentPrice", expression = "java(normalizeMonetary(currentPosition.getCurrentPrice()))")
+    @Mapping(target = "totalCost", expression = "java(normalizeMonetary(currentPosition.getTotalCost()))")
+    @Mapping(target = "marketValue", expression = "java(normalizeMonetary(currentPosition.getMarketValue()))")
+    @Mapping(target = "unrealizedGainLoss", expression = "java(normalizeMonetary(currentPosition.getUnrealizedGainLoss()))")
+    @Mapping(target = "unrealizedGainLossPercentage", expression = "java(normalizeMonetary(currentPosition.getUnrealizedGainLossPercentage()))")
+    PositionResponse toResponse(CurrentPosition currentPosition);
+
+    List<PositionResponse> toCurrentPositionResponses(List<CurrentPosition> currentPositions);
 
     // Normalization helpers
     default BigDecimal normalizeMonetary(BigDecimal value) {

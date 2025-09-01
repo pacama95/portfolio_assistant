@@ -71,10 +71,19 @@ CREATE TRIGGER update_positions_updated_at BEFORE UPDATE ON positions
 CREATE VIEW portfolio_summary AS
 SELECT 
     COUNT(*) as total_positions,
-    SUM(current_quantity * current_price) as total_market_value,
+    SUM(current_quantity * current_price * 
+        COALESCE((SELECT fractional_multiplier FROM transactions 
+                 WHERE ticker = positions.ticker AND is_fractional = true 
+                 ORDER BY transaction_date DESC LIMIT 1), 1.0)) as total_market_value,
     SUM(total_cost_basis) as total_cost_basis,
-    SUM(current_quantity * current_price) - SUM(total_cost_basis) as total_unrealized_gain_loss,
-    (SUM(current_quantity * current_price) - SUM(total_cost_basis)) / NULLIF(SUM(total_cost_basis), 0) * 100 as total_return_percentage
+    SUM(current_quantity * current_price * 
+        COALESCE((SELECT fractional_multiplier FROM transactions 
+                 WHERE ticker = positions.ticker AND is_fractional = true 
+                 ORDER BY transaction_date DESC LIMIT 1), 1.0)) - SUM(total_cost_basis) as total_unrealized_gain_loss,
+    (SUM(current_quantity * current_price * 
+         COALESCE((SELECT fractional_multiplier FROM transactions 
+                  WHERE ticker = positions.ticker AND is_fractional = true 
+                  ORDER BY transaction_date DESC LIMIT 1), 1.0)) - SUM(total_cost_basis)) / NULLIF(SUM(total_cost_basis), 0) * 100 as total_return_percentage
 FROM positions 
 WHERE current_quantity > 0;
 
@@ -82,11 +91,20 @@ WHERE current_quantity > 0;
 CREATE VIEW position_details AS
 SELECT 
     p.*,
-    (p.current_quantity * p.current_price) as market_value,
-    (p.current_quantity * p.current_price) - p.total_cost_basis as unrealized_pnl,
+    (p.current_quantity * p.current_price * 
+     COALESCE((SELECT fractional_multiplier FROM transactions 
+              WHERE ticker = p.ticker AND is_fractional = true 
+              ORDER BY transaction_date DESC LIMIT 1), 1.0)) as market_value,
+    (p.current_quantity * p.current_price * 
+     COALESCE((SELECT fractional_multiplier FROM transactions 
+              WHERE ticker = p.ticker AND is_fractional = true 
+              ORDER BY transaction_date DESC LIMIT 1), 1.0)) - p.total_cost_basis as unrealized_pnl,
     CASE 
         WHEN p.total_cost_basis > 0 
-        THEN ((p.current_quantity * p.current_price) - p.total_cost_basis) / p.total_cost_basis * 100
+        THEN ((p.current_quantity * p.current_price * 
+               COALESCE((SELECT fractional_multiplier FROM transactions 
+                        WHERE ticker = p.ticker AND is_fractional = true 
+                        ORDER BY transaction_date DESC LIMIT 1), 1.0)) - p.total_cost_basis) / p.total_cost_basis * 100
         ELSE 0 
     END as return_percentage
 FROM positions p
@@ -132,15 +150,30 @@ BEGIN
             total_commissions = EXCLUDED.total_commissions,
             first_purchase_date = EXCLUDED.first_purchase_date,
             last_transaction_date = EXCLUDED.last_transaction_date,
-            -- Recalculate market values using existing current_price
+            -- Adjust current_price with fractional multiplier if fractional transactions exist
+            current_price = CASE 
+                WHEN positions.current_price IS NOT NULL AND positions.current_price > 0 
+                THEN positions.current_price * 
+                    COALESCE((SELECT fractional_multiplier FROM transactions 
+                             WHERE ticker = ticker_symbol AND is_fractional = true 
+                             ORDER BY transaction_date DESC LIMIT 1), 1.0)
+                ELSE positions.current_price 
+            END,
+            -- Recalculate market values using existing current_price with fractional multiplier
             current_market_value = CASE 
                 WHEN positions.current_price IS NOT NULL AND positions.current_price > 0 
-                THEN EXCLUDED.current_quantity * positions.current_price 
+                THEN EXCLUDED.current_quantity * positions.current_price * 
+                    COALESCE((SELECT fractional_multiplier FROM transactions 
+                             WHERE ticker = ticker_symbol AND is_fractional = true 
+                             ORDER BY transaction_date DESC LIMIT 1), 1.0)
                 ELSE positions.current_market_value 
             END,
             unrealized_gain_loss = CASE 
                 WHEN positions.current_price IS NOT NULL AND positions.current_price > 0 
-                THEN (EXCLUDED.current_quantity * positions.current_price) - EXCLUDED.total_cost_basis
+                THEN (EXCLUDED.current_quantity * positions.current_price * 
+                     COALESCE((SELECT fractional_multiplier FROM transactions 
+                              WHERE ticker = ticker_symbol AND is_fractional = true 
+                              ORDER BY transaction_date DESC LIMIT 1), 1.0)) - EXCLUDED.total_cost_basis
                 ELSE positions.unrealized_gain_loss 
             END,
             updated_at = CURRENT_TIMESTAMP;

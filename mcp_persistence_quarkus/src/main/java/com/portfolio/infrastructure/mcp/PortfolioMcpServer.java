@@ -3,6 +3,8 @@ package com.portfolio.infrastructure.mcp;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.portfolio.application.command.CreateTransactionCommand;
 import com.portfolio.application.command.UpdateTransactionCommand;
+import com.portfolio.application.usecase.dividend.GetDividendsForPortfolioUseCase;
+import com.portfolio.application.usecase.dividend.GetDividendsForTickerUseCase;
 import com.portfolio.application.usecase.portfolio.GetPortfolioSummaryUseCase;
 import com.portfolio.application.usecase.position.GetPositionUseCase;
 import com.portfolio.application.usecase.position.RecalculatePositionUseCase;
@@ -55,6 +57,12 @@ public class PortfolioMcpServer {
 
     @Inject
     RecalculatePositionUseCase recalculatePositionUseCase;
+
+    @Inject
+    GetDividendsForTickerUseCase getDividendsForTickerUseCase;
+
+    @Inject
+    GetDividendsForPortfolioUseCase getDividendsForPortfolioUseCase;
 
     @Inject
     ParameterConversionService parameterConversionService;
@@ -323,5 +331,54 @@ public class PortfolioMcpServer {
         return Uni.createFrom().item("Recalculating all positions...")
             .onFailure().invoke(e -> Log.error("Error recalculating all positions", e))
             .onFailure().transform(throwable -> new ToolCallException("Error recalculating all positions"));
+    }
+
+    @Tool(description = "Get dividend payments for a specific stock ticker within a date range.")
+    public Uni<String> getDividendsForTicker(
+            @ToolArg(description = "Stock ticker symbol") String ticker,
+            @ToolArg(description = "Start date for dividend query (YYYY-MM-DD)") Object startDate,
+            @ToolArg(description = "End date for dividend query (YYYY-MM-DD)") Object endDate) {
+        
+        try {
+            LocalDate convertedStartDate = (LocalDate) parameterConversionService.convert(startDate, "startDate");
+            LocalDate convertedEndDate = (LocalDate) parameterConversionService.convert(endDate, "endDate");
+            
+            return getDividendsForTickerUseCase.execute(ticker, convertedStartDate, convertedEndDate)
+                .map(dividends -> {
+                    try {
+                        return objectMapper.writeValueAsString(dividends);
+                    } catch (Exception e) {
+                        throw new RuntimeException("Error serializing result", e);
+                    }
+                })
+                .onFailure().invoke(e -> Log.error("Error getting dividends for ticker %s from %s to %s".formatted(ticker, convertedStartDate, convertedEndDate), e))
+                .onFailure().transform(throwable -> new ToolCallException("Error getting dividends for ticker %s".formatted(ticker)));
+        } catch (IllegalArgumentException e) {
+            throw new ToolCallException("Validation error", e);
+        }
+    }
+
+    @Tool(description = "Get dividend payments for all active positions in the portfolio within a date range.")
+    public Uni<String> getDividendsForPortfolio(
+            @ToolArg(description = "Start date for dividend query (YYYY-MM-DD)") Object startDate,
+            @ToolArg(description = "End date for dividend query (YYYY-MM-DD)") Object endDate) {
+        
+        try {
+            LocalDate convertedStartDate = (LocalDate) parameterConversionService.convert(startDate, "startDate");
+            LocalDate convertedEndDate = (LocalDate) parameterConversionService.convert(endDate, "endDate");
+            
+            return getDividendsForPortfolioUseCase.execute(convertedStartDate, convertedEndDate)
+                .map(dividendsMap -> {
+                    try {
+                        return objectMapper.writeValueAsString(dividendsMap);
+                    } catch (Exception e) {
+                        throw new RuntimeException("Error serializing result", e);
+                    }
+                })
+                .onFailure().invoke(e -> Log.error("Error getting portfolio dividends from %s to %s".formatted(convertedStartDate, convertedEndDate), e))
+                .onFailure().transform(throwable -> new ToolCallException("Error getting portfolio dividends"));
+        } catch (IllegalArgumentException e) {
+            throw new ToolCallException("Validation error", e);
+        }
     }
 } 
