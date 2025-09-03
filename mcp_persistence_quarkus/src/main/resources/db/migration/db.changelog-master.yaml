@@ -1,9 +1,0 @@
-databaseChangeLog:
-  - changeSet:
-      id: init-schema
-      author: portfolio
-      changes:
-        - sqlFile:
-            path: schema.sql
-            relativeToChangelogFile: true
-            splitStatements: false
